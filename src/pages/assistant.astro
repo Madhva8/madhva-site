@@ -16,6 +16,56 @@
       display: flex;
       overflow: hidden;
     }
+
+    /* LOGIN */
+    #login-screen {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #login-box {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 16px;
+      padding: 40px;
+      width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #login-box h1 { font-size: 1.2rem; color: #e0e0e0; text-align: center; }
+    #login-box p { font-size: 0.8rem; color: #555; text-align: center; }
+    .login-input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid #2a2a2a;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .login-input:focus { border-color: #0070f3; }
+    #login-btn {
+      width: 100%;
+      padding: 12px;
+      background: #0070f3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+    #login-btn:hover { background: #005bb5; }
+    #login-btn:disabled { background: #1a1a1a; color: #444; cursor: not-allowed; }
+    #login-error { color: #ef4444; font-size: 0.8rem; text-align: center; min-height: 16px; }
+
+    /* CHAT APP */
+    #app { width: 100%; display: none; }
     #sidebar {
       width: 260px;
       min-width: 260px;
@@ -26,6 +76,7 @@
       padding: 12px;
       gap: 8px;
       overflow: hidden;
+      height: 100vh;
     }
     #sidebar-header {
       display: flex;
@@ -101,18 +152,30 @@
     }
     .model-btn.active { background: #0070f3; color: white; border-color: #0070f3; }
     .model-btn:hover:not(.active) { background: #2a2a2a; color: #ccc; }
+    #logout-btn {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #2a2a2a;
+      background: none;
+      color: #555;
+      cursor: pointer;
+      font-size: 0.8rem;
+      text-align: left;
+      transition: all 0.2s;
+      margin-top: 4px;
+    }
+    #logout-btn:hover { color: #ef4444; border-color: #ef4444; background: #1a0a0a; }
     #main {
       flex: 1;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      height: 100vh;
     }
     #chat-header {
       padding: 14px 20px;
       border-bottom: 1px solid #1a1a1a;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
     }
     #chat-title { font-size: 0.95rem; color: #ccc; font-weight: 500; }
     #chat-subtitle { font-size: 0.75rem; color: #555; margin-top: 2px; }
@@ -121,7 +184,6 @@
       color: #444;
       padding: 4px 20px;
       min-height: 20px;
-      transition: color 0.3s;
     }
     #status-bar.saved { color: #22c55e; }
     #status-bar.error { color: #ef4444; }
@@ -177,14 +239,10 @@
       align-items: center;
       justify-content: center;
       gap: 12px;
-      color: #333;
     }
     .empty-state h2 { font-size: 1.4rem; color: #444; }
     .empty-state p { font-size: 0.85rem; color: #333; }
-    #input-area {
-      padding: 16px 20px;
-      border-top: 1px solid #1a1a1a;
-    }
+    #input-area { padding: 16px 20px; border-top: 1px solid #1a1a1a; }
     #input-row { display: flex; gap: 10px; }
     #user-input {
       flex: 1;
@@ -215,40 +273,58 @@
 </head>
 <body>
 
-  <div id="sidebar">
-    <div id="sidebar-header">
-      <span style="font-size:0.85rem;color:#666;">🔬 Physics Assistant</span>
-      <a href="/">← Site</a>
-    </div>
-    <button id="new-chat-btn" onclick="newChat()">✏️ New chat</button>
-    <div id="sessions-list"></div>
-    <div id="sidebar-footer">
-      <button class="model-btn active" onclick="switchModel('gemini')" id="btn-gemini">✨ Gemini 2.5 Flash</button>
-      <button class="model-btn" onclick="switchModel('deepseek')" id="btn-deepseek">🧠 DeepSeek</button>
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen">
+    <div id="login-box">
+      <h1>🔬 Physics AI Assistant</h1>
+      <p>Private access only</p>
+      <input class="login-input" type="email" id="login-email" placeholder="Email" autocomplete="email"/>
+      <input class="login-input" type="password" id="login-password" placeholder="Password" autocomplete="current-password"/>
+      <button id="login-btn" onclick="login()">Sign in</button>
+      <div id="login-error"></div>
     </div>
   </div>
 
-  <div id="main">
-    <div id="chat-header">
-      <div>
-        <div id="chat-title">New conversation</div>
-        <div id="chat-subtitle">ALICE/TRD · Electron-Pion Separation</div>
+  <!-- CHAT APP (hidden until logged in) -->
+  <div id="app" style="display:none; width:100%; height:100vh; overflow:hidden; display:none;">
+    <div style="display:flex; width:100%; height:100vh;">
+
+      <div id="sidebar">
+        <div id="sidebar-header">
+          <span style="font-size:0.85rem;color:#666;">🔬 Physics Assistant</span>
+          <a href="/">← Site</a>
+        </div>
+        <button id="new-chat-btn" onclick="newChat()">✏️ New chat</button>
+        <div id="sessions-list"></div>
+        <div id="sidebar-footer">
+          <button class="model-btn active" onclick="switchModel('gemini')" id="btn-gemini">✨ Gemini 2.5 Flash</button>
+          <button class="model-btn" onclick="switchModel('deepseek')" id="btn-deepseek">🧠 DeepSeek</button>
+          <button id="logout-btn" onclick="logout()">⎋ Sign out</button>
+        </div>
       </div>
-    </div>
-    <div id="status-bar"></div>
-    <div id="chat-box">
-      <div class="empty-state" id="empty-state">
-        <h2>🔬 Physics AI Assistant</h2>
-        <p>Pre-loaded with your ALICE/TRD project context</p>
-        <p>Ask about ROOT, O2Physics, TRD, BDT...</p>
+
+      <div id="main">
+        <div id="chat-header">
+          <div id="chat-title">New conversation</div>
+          <div id="chat-subtitle">ALICE/TRD · Electron-Pion Separation</div>
+        </div>
+        <div id="status-bar"></div>
+        <div id="chat-box">
+          <div class="empty-state" id="empty-state">
+            <h2>🔬 Physics AI Assistant</h2>
+            <p>Pre-loaded with your ALICE/TRD project context</p>
+            <p>Ask about ROOT, O2Physics, TRD, BDT...</p>
+          </div>
+        </div>
+        <div id="input-area">
+          <div id="input-row">
+            <input id="user-input" type="text" placeholder="Ask about ROOT, O2Physics, TRD..." autocomplete="off"/>
+            <button id="send-btn" onclick="sendMessage()">Send</button>
+          </div>
+          <div id="input-hint">Enter to send · Switch models in sidebar</div>
+        </div>
       </div>
-    </div>
-    <div id="input-area">
-      <div id="input-row">
-        <input id="user-input" type="text" placeholder="Ask about ROOT, O2Physics, TRD..." autocomplete="off"/>
-        <button id="send-btn" onclick="sendMessage()">Send</button>
-      </div>
-      <div id="input-hint">Enter to send · Switch models in sidebar</div>
+
     </div>
   </div>
 
@@ -264,26 +340,120 @@
     let history = [];
     let sessionId = null;
     let sessions = [];
+    let accessToken = null;
 
     const chatBox = document.getElementById('chat-box');
     const input = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
     const statusBar = document.getElementById('status-bar');
 
+    // ── AUTH ──────────────────────────────────────────────────
+    async function login() {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const errEl = document.getElementById('login-error');
+      const btn = document.getElementById('login-btn');
+
+      if (!email || !password) { errEl.textContent = 'Please enter email and password.'; return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      errEl.textContent = '';
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (data.error || !data.access_token) {
+          errEl.textContent = 'Invalid email or password.';
+          btn.disabled = false;
+          btn.textContent = 'Sign in';
+          return;
+        }
+
+        accessToken = data.access_token;
+        localStorage.setItem('sb_access_token', accessToken);
+        localStorage.setItem('sb_refresh_token', data.refresh_token);
+        showApp();
+
+      } catch {
+        errEl.textContent = 'Connection error. Try again.';
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
+      }
+    }
+
+    async function refreshToken() {
+      const refresh = localStorage.getItem('sb_refresh_token');
+      if (!refresh) return false;
+      try {
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ refresh_token: refresh })
+        });
+        const data = await res.json();
+        if (data.access_token) {
+          accessToken = data.access_token;
+          localStorage.setItem('sb_access_token', accessToken);
+          localStorage.setItem('sb_refresh_token', data.refresh_token);
+          return true;
+        }
+      } catch {}
+      return false;
+    }
+
+    async function logout() {
+      try {
+        await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${accessToken}` }
+        });
+      } catch {}
+      accessToken = null;
+      localStorage.removeItem('sb_access_token');
+      localStorage.removeItem('sb_refresh_token');
+      localStorage.removeItem('chat_session_id');
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('login-btn').disabled = false;
+      document.getElementById('login-btn').textContent = 'Sign in';
+      document.getElementById('login-email').value = '';
+      document.getElementById('login-password').value = '';
+    }
+
+    function showApp() {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      init();
+    }
+
+    function authHeaders() {
+      return {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${accessToken}`
+      };
+    }
+
+    // ── STATUS ────────────────────────────────────────────────
     function setStatus(msg, type) {
       statusBar.textContent = msg;
       statusBar.className = type || '';
       if (msg) setTimeout(() => { statusBar.textContent = ''; statusBar.className = ''; }, 3000);
     }
 
+    // ── SUPABASE ──────────────────────────────────────────────
     async function saveMessage(role, content) {
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            ...authHeaders(),
             'Prefer': 'return=representation'
           },
           body: JSON.stringify({ role, content, model, session_id: sessionId })
@@ -298,7 +468,7 @@
       try {
         await fetch(`${SUPABASE_URL}/rest/v1/messages?id=eq.${msgId}`, {
           method: 'DELETE',
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          headers: authHeaders()
         });
         wrapperEl.remove();
         setStatus('Message deleted', '');
@@ -309,7 +479,7 @@
       try {
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/messages?select=session_id,created_at,content,role&order=created_at.asc`,
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+          { headers: authHeaders() }
         );
         const msgs = await res.json();
         const map = {};
@@ -365,7 +535,7 @@
       try {
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/messages?session_id=eq.${id}&order=created_at.asc`,
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+          { headers: authHeaders() }
         );
         const msgs = await res.json();
         msgs.forEach(m => {
@@ -386,7 +556,7 @@
       try {
         await fetch(`${SUPABASE_URL}/rest/v1/messages?session_id=eq.${id}`, {
           method: 'DELETE',
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          headers: authHeaders()
         });
         el.remove();
         sessions = sessions.filter(s => s.id !== id);
@@ -409,7 +579,6 @@
       document.querySelectorAll('.session-item').forEach(el => el.classList.remove('active'));
     }
 
-    // ── KEY FIX: model switch does NOT clear messages or history ──
     function switchModel(m) {
       model = m;
       document.getElementById('btn-gemini').classList.toggle('active', m === 'gemini');
@@ -534,7 +703,32 @@
       }
     }
 
-    init();
+    // ── STARTUP ───────────────────────────────────────────────
+    async function startup() {
+      const stored = localStorage.getItem('sb_access_token');
+      if (stored) {
+        accessToken = stored;
+        // Verify token is still valid
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${accessToken}` }
+        });
+        if (res.ok) {
+          showApp();
+          return;
+        }
+        // Try refresh
+        const refreshed = await refreshToken();
+        if (refreshed) { showApp(); return; }
+      }
+      // Show login
+      document.getElementById('login-screen').style.display = 'flex';
+    }
+
+    document.getElementById('login-password').addEventListener('keypress', e => {
+      if (e.key === 'Enter') login();
+    });
+
+    startup();
   </script>
 
 </body>
