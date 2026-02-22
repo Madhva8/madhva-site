@@ -14,150 +14,253 @@
       color: #e0e0e0;
       height: 100vh;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
+      overflow: hidden;
     }
-    .top-bar {
-      width: 100%;
-      max-width: 750px;
+
+    /* SIDEBAR */
+    #sidebar {
+      width: 260px;
+      min-width: 260px;
+      background: #111;
+      border-right: 1px solid #222;
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      gap: 8px;
+      overflow: hidden;
+    }
+    #sidebar-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      padding: 4px 0 8px;
+      border-bottom: 1px solid #222;
     }
-    .top-bar a { color: #888; text-decoration: none; font-size: 0.85rem; }
-    .top-bar a:hover { color: #fff; }
-    h1 { font-size: 1.4rem; margin-bottom: 6px; }
-    .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 12px; text-align: center; }
-    .model-switcher { display: flex; gap: 8px; margin-bottom: 12px; }
+    #sidebar-header a { color: #888; text-decoration: none; font-size: 0.8rem; }
+    #sidebar-header a:hover { color: #fff; }
+    #new-chat-btn {
+      width: 100%;
+      padding: 10px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #e0e0e0;
+      cursor: pointer;
+      font-size: 0.88rem;
+      text-align: left;
+      transition: background 0.2s;
+    }
+    #new-chat-btn:hover { background: #2a2a2a; }
+    #sessions-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .session-item {
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.83rem;
+      color: #aaa;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    .session-item:hover { background: #1e1e1e; }
+    .session-item.active { background: #1e2a3a; color: #fff; }
+    .session-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .session-date { font-size: 0.7rem; color: #555; white-space: nowrap; }
+    .session-delete {
+      background: none;
+      border: none;
+      color: #444;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: all 0.2s;
+    }
+    .session-item:hover .session-delete { opacity: 1; }
+    .session-delete:hover { color: #ef4444; background: #2a1a1a; }
+    #sidebar-footer { border-top: 1px solid #222; padding-top: 8px; }
     .model-btn {
-      padding: 6px 16px;
-      border-radius: 20px;
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
       border: 1px solid #333;
       background: #1a1a1a;
       color: #888;
       cursor: pointer;
-      font-size: 0.85rem;
+      font-size: 0.83rem;
+      text-align: left;
       transition: all 0.2s;
+      margin-bottom: 4px;
     }
     .model-btn.active { background: #0070f3; color: white; border-color: #0070f3; }
     .model-btn:hover:not(.active) { background: #2a2a2a; color: #ccc; }
+
+    /* MAIN CHAT */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #chat-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    #chat-title { font-size: 0.95rem; color: #ccc; font-weight: 500; }
+    #chat-subtitle { font-size: 0.75rem; color: #555; margin-top: 2px; }
+    #status-bar {
+      font-size: 0.72rem;
+      color: #444;
+      padding: 4px 20px;
+      min-height: 20px;
+      transition: color 0.3s;
+    }
+    #status-bar.saved { color: #22c55e; }
+    #status-bar.error { color: #ef4444; }
     #chat-box {
-      width: 100%;
-      max-width: 750px;
       flex: 1;
       overflow-y: auto;
-      background: #1a1a1a;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 12px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
     }
-    .msg-wrapper {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .msg-wrapper.user { align-items: flex-end; }
-    .msg-wrapper.ai { align-items: flex-start; }
+    .msg-wrapper { display: flex; flex-direction: column; max-width: 75%; gap: 4px; }
+    .msg-wrapper.user { align-self: flex-end; align-items: flex-end; }
+    .msg-wrapper.ai { align-self: flex-start; align-items: flex-start; }
+    .msg-label { font-size: 0.7rem; color: #555; padding: 0 4px; }
     .msg {
-      padding: 10px 14px;
-      border-radius: 10px;
-      max-width: 85%;
-      line-height: 1.6;
+      padding: 12px 16px;
+      border-radius: 12px;
+      line-height: 1.65;
       font-size: 0.92rem;
       white-space: pre-wrap;
       word-wrap: break-word;
     }
-    .user-msg { background: #0070f3; color: white; }
-    .ai-msg { background: #2a2a2a; color: #e0e0e0; }
-    .msg-actions {
-      display: flex;
-      gap: 6px;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
+    .user-msg { background: #0070f3; color: white; border-radius: 12px 12px 4px 12px; }
+    .ai-msg { background: #1e1e1e; color: #e0e0e0; border: 1px solid #2a2a2a; border-radius: 12px 12px 12px 4px; }
+    .msg-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; }
     .msg-wrapper:hover .msg-actions { opacity: 1; }
     .msg-action-btn {
-      background: none;
-      border: none;
-      color: #555;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #666;
       cursor: pointer;
-      font-size: 0.75rem;
-      padding: 2px 6px;
+      font-size: 0.72rem;
+      padding: 3px 8px;
       border-radius: 4px;
       transition: all 0.2s;
     }
-    .msg-action-btn:hover { background: #2a2a2a; color: #e0e0e0; }
+    .msg-action-btn:hover { background: #2a1a1a; color: #ef4444; border-color: #ef4444; }
     .typing {
-      background: #2a2a2a;
-      color: #888;
       align-self: flex-start;
-      padding: 10px 14px;
-      border-radius: 10px;
+      background: #1e1e1e;
+      border: 1px solid #2a2a2a;
+      color: #666;
+      padding: 12px 16px;
+      border-radius: 12px;
       font-style: italic;
       font-size: 0.85rem;
     }
-    #input-row { display: flex; width: 100%; max-width: 750px; gap: 8px; }
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: #333;
+    }
+    .empty-state h2 { font-size: 1.4rem; color: #444; }
+    .empty-state p { font-size: 0.85rem; color: #333; }
+    #input-area {
+      padding: 16px 20px;
+      border-top: 1px solid #1a1a1a;
+    }
+    #input-row { display: flex; gap: 10px; }
     #user-input {
       flex: 1;
       padding: 12px 16px;
       border-radius: 10px;
-      border: 1px solid #333;
+      border: 1px solid #2a2a2a;
       background: #1a1a1a;
       color: #e0e0e0;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       outline: none;
+      transition: border-color 0.2s;
     }
     #user-input:focus { border-color: #0070f3; }
-    button {
+    #send-btn {
       padding: 12px 20px;
       background: #0070f3;
       color: white;
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       transition: background 0.2s;
     }
-    button:hover { background: #005bb5; }
-    button:disabled { background: #333; cursor: not-allowed; }
-    .clear-btn { background: #2a2a2a; font-size: 0.8rem; padding: 6px 12px; }
-    .clear-btn:hover { background: #3a2a2a; color: #ff6b6b; }
-    .status-bar {
-      font-size: 0.75rem;
-      color: #444;
-      margin-bottom: 8px;
-      text-align: center;
-    }
-    .status-bar.saved { color: #22c55e; }
-    .status-bar.error { color: #ef4444; }
+    #send-btn:hover { background: #005bb5; }
+    #send-btn:disabled { background: #1a1a1a; color: #444; cursor: not-allowed; border: 1px solid #2a2a2a; }
+    #input-hint { font-size: 0.72rem; color: #333; margin-top: 6px; text-align: center; }
   </style>
 </head>
 <body>
 
-  <div class="top-bar">
-    <a href="/">← Back to site</a>
-    <button class="clear-btn" onclick="clearChat()">🗑 Clear all</button>
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <span style="font-size:0.85rem;color:#666;">🔬 Physics Assistant</span>
+      <a href="/">← Site</a>
+    </div>
+
+    <button id="new-chat-btn" onclick="newChat()">✏️ New chat</button>
+
+    <div id="sessions-list"></div>
+
+    <div id="sidebar-footer">
+      <button class="model-btn active" onclick="switchModel('gemini')" id="btn-gemini">✨ Gemini 2.5 Flash</button>
+      <button class="model-btn" onclick="switchModel('deepseek')" id="btn-deepseek">🧠 DeepSeek</button>
+    </div>
   </div>
 
-  <h1>🔬 Physics AI Assistant</h1>
-  <p class="subtitle">Pre-loaded with ALICE/TRD context · Gemini & DeepSeek · History saved</p>
+  <!-- MAIN -->
+  <div id="main">
+    <div id="chat-header">
+      <div>
+        <div id="chat-title">New conversation</div>
+        <div id="chat-subtitle">ALICE/TRD · Electron-Pion Separation</div>
+      </div>
+    </div>
 
-  <div class="model-switcher">
-    <button class="model-btn active" onclick="switchModel('gemini')" id="btn-gemini">✨ Gemini 2.5 Flash</button>
-    <button class="model-btn" onclick="switchModel('deepseek')" id="btn-deepseek">🧠 DeepSeek</button>
-  </div>
+    <div id="status-bar"></div>
+    <div id="chat-box">
+      <div class="empty-state" id="empty-state">
+        <h2>🔬 Physics AI Assistant</h2>
+        <p>Pre-loaded with your ALICE/TRD project context</p>
+        <p>Ask about ROOT, O2Physics, TRD, BDT...</p>
+      </div>
+    </div>
 
-  <div id="status-bar" class="status-bar">Loading history...</div>
-  <div id="chat-box"></div>
-
-  <div id="input-row">
-    <input id="user-input" type="text" placeholder="Ask about ROOT, O2Physics, TRD..." autocomplete="off"/>
-    <button id="send-btn" onclick="sendMessage()">Send</button>
+    <div id="input-area">
+      <div id="input-row">
+        <input id="user-input" type="text" placeholder="Ask about ROOT, O2Physics, TRD..." autocomplete="off"/>
+        <button id="send-btn" onclick="sendMessage()">Send</button>
+      </div>
+      <div id="input-hint">Enter to send · Switch models in sidebar</div>
+    </div>
   </div>
 
   <script is:inline>
@@ -165,25 +268,26 @@
 
     const GEMINI_KEY = 'AIzaSyDJn8crTQ0kSwuRmKlh56B6Eu62DQ5SHTo';
     const DEEPSEEK_KEY = 'sk-b8653889f21b4f86bec501d959c3ef6e';
-
     const SUPABASE_URL = 'https://fvwpzmnjejxmzaczkpde.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_Ayveuh9J65cAG6Yi9QLZgA_PP5i_GaK';
 
-    let sessionId = localStorage.getItem('chat_session_id');
-    if (!sessionId) {
-      sessionId = 'session_' + Date.now();
-      localStorage.setItem('chat_session_id', sessionId);
-    }
-
     let model = 'gemini';
     let history = [];
-    let messageIds = []; // track supabase IDs for deletion
+    let sessionId = null;
+    let sessions = [];
 
     const chatBox = document.getElementById('chat-box');
     const input = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
     const statusBar = document.getElementById('status-bar');
 
+    function setStatus(msg, type) {
+      statusBar.textContent = msg;
+      statusBar.className = type || '';
+      if (msg) setTimeout(() => { statusBar.textContent = ''; statusBar.className = ''; }, 3000);
+    }
+
+    // ── SUPABASE ──────────────────────────────────────────────
     async function saveMessage(role, content) {
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
@@ -198,84 +302,148 @@
         });
         const data = await res.json();
         setStatus('✓ Saved', 'saved');
-        setTimeout(() => setStatus('', ''), 2000);
         return data[0]?.id || null;
-      } catch (err) {
-        setStatus('⚠ Save failed', 'error');
-        return null;
-      }
+      } catch { setStatus('⚠ Save failed', 'error'); return null; }
     }
 
-    async function deleteMessage(msgId, wrapperEl) {
-      if (!msgId) return;
+    async function deleteMessageFromDB(msgId, wrapperEl) {
       try {
         await fetch(`${SUPABASE_URL}/rest/v1/messages?id=eq.${msgId}`, {
           method: 'DELETE',
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`
-          }
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
         });
         wrapperEl.remove();
         setStatus('Message deleted', '');
-        setTimeout(() => setStatus('', ''), 2000);
-      } catch (err) {
-        setStatus('⚠ Delete failed', 'error');
-      }
+      } catch { setStatus('⚠ Delete failed', 'error'); }
     }
 
-    async function loadHistory() {
+    async function loadSessions() {
       try {
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/messages?session_id=eq.${sessionId}&order=created_at.asc`,
+          `${SUPABASE_URL}/rest/v1/messages?select=session_id,created_at,content,role&order=created_at.asc`,
           { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
         );
-        const messages = await res.json();
+        const msgs = await res.json();
 
-        if (!messages || messages.length === 0) {
-          appendMessage(null, 'Hi Madhva! I\'m pre-loaded with your ALICE TRD project context. Ask me anything!', 'ai');
-          setStatus('New session', '');
-          return;
-        }
-
-        messages.forEach(m => {
-          appendMessage(m.id, m.content, m.role === 'user' ? 'user' : 'ai');
-          if (m.role === 'user') {
-            history.push(model === 'gemini'
-              ? { role: 'user', parts: [{ text: m.content }] }
-              : { role: 'user', content: m.content });
-          } else {
-            history.push(model === 'gemini'
-              ? { role: 'model', parts: [{ text: m.content }] }
-              : { role: 'assistant', content: m.content });
-          }
+        // Group by session
+        const map = {};
+        msgs.forEach(m => {
+          if (!map[m.session_id]) map[m.session_id] = { id: m.session_id, first: m.content, date: m.created_at };
         });
-
-        setStatus(`✓ Loaded ${messages.length} messages`, 'saved');
-        setTimeout(() => setStatus('', ''), 3000);
-      } catch (err) {
-        appendMessage(null, 'Could not load history. Ask me anything!', 'ai');
-        setStatus('⚠ Could not load history', 'error');
-      }
+        sessions = Object.values(map).reverse();
+        renderSessions();
+      } catch {}
     }
 
-    function setStatus(msg, type) {
-      statusBar.textContent = msg;
-      statusBar.className = 'status-bar' + (type ? ' ' + type : '');
+    function renderSessions() {
+      const list = document.getElementById('sessions-list');
+      list.innerHTML = '';
+      if (sessions.length === 0) {
+        list.innerHTML = '<div style="font-size:0.75rem;color:#333;padding:8px;">No past chats yet</div>';
+        return;
+      }
+      sessions.forEach(s => {
+        const el = document.createElement('div');
+        el.className = 'session-item' + (s.id === sessionId ? ' active' : '');
+        el.dataset.id = s.id;
+
+        const title = document.createElement('span');
+        title.className = 'session-title';
+        title.textContent = s.first?.slice(0, 35) || 'New chat';
+
+        const date = document.createElement('span');
+        date.className = 'session-date';
+        date.textContent = new Date(s.date).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+
+        const del = document.createElement('button');
+        del.className = 'session-delete';
+        del.textContent = '✕';
+        del.title = 'Delete session';
+        del.onclick = (e) => { e.stopPropagation(); deleteSession(s.id, el); };
+
+        el.appendChild(title);
+        el.appendChild(date);
+        el.appendChild(del);
+        el.onclick = () => loadSession(s.id);
+        list.appendChild(el);
+      });
+    }
+
+    async function loadSession(id) {
+      sessionId = id;
+      localStorage.setItem('chat_session_id', id);
+      history = [];
+      chatBox.innerHTML = '';
+
+      document.querySelectorAll('.session-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.id === id);
+      });
+
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/messages?session_id=eq.${id}&order=created_at.asc`,
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+        );
+        const msgs = await res.json();
+        msgs.forEach(m => {
+          appendMessage(m.id, m.content, m.role === 'user' ? 'user' : 'ai');
+          history.push(model === 'gemini'
+            ? (m.role === 'user' ? { role:'user', parts:[{text:m.content}] } : { role:'model', parts:[{text:m.content}] })
+            : { role: m.role === 'assistant' ? 'assistant' : m.role, content: m.content }
+          );
+        });
+
+        const firstMsg = msgs.find(m => m.role === 'user');
+        document.getElementById('chat-title').textContent = firstMsg?.content?.slice(0,50) || 'Conversation';
+        setStatus(`Loaded ${msgs.length} messages`, 'saved');
+      } catch { setStatus('⚠ Could not load session', 'error'); }
+    }
+
+    async function deleteSession(id, el) {
+      if (!confirm('Delete this entire conversation?')) return;
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/messages?session_id=eq.${id}`, {
+          method: 'DELETE',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
+        el.remove();
+        sessions = sessions.filter(s => s.id !== id);
+        if (id === sessionId) newChat();
+        setStatus('Session deleted', '');
+      } catch { setStatus('⚠ Delete failed', 'error'); }
+    }
+
+    function newChat() {
+      sessionId = 'session_' + Date.now();
+      localStorage.setItem('chat_session_id', sessionId);
+      history = [];
+      chatBox.innerHTML = `
+        <div class="empty-state" id="empty-state">
+          <h2>🔬 Physics AI Assistant</h2>
+          <p>Pre-loaded with your ALICE/TRD project context</p>
+          <p>Ask about ROOT, O2Physics, TRD, BDT...</p>
+        </div>`;
+      document.getElementById('chat-title').textContent = 'New conversation';
+      document.querySelectorAll('.session-item').forEach(el => el.classList.remove('active'));
     }
 
     function switchModel(m) {
       model = m;
-      history = [];
       document.getElementById('btn-gemini').classList.toggle('active', m === 'gemini');
       document.getElementById('btn-deepseek').classList.toggle('active', m === 'deepseek');
-      chatBox.innerHTML = '';
-      appendMessage(null, `Switched to ${m === 'gemini' ? '✨ Gemini 2.5 Flash' : '🧠 DeepSeek'}!`, 'ai');
+      setStatus(`Switched to ${m === 'gemini' ? 'Gemini 2.5 Flash' : 'DeepSeek'}`, '');
     }
 
     function appendMessage(msgId, text, type) {
+      const empty = document.getElementById('empty-state');
+      if (empty) empty.remove();
+
       const wrapper = document.createElement('div');
       wrapper.className = `msg-wrapper ${type}`;
+
+      const label = document.createElement('div');
+      label.className = 'msg-label';
+      label.textContent = type === 'user' ? 'You' : (model === 'gemini' ? 'Gemini 2.5 Flash' : 'DeepSeek');
 
       const el = document.createElement('div');
       el.className = `msg ${type === 'user' ? 'user-msg' : 'ai-msg'}`;
@@ -283,13 +451,15 @@
 
       const actions = document.createElement('div');
       actions.className = 'msg-actions';
+      if (msgId) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'msg-action-btn';
+        deleteBtn.textContent = '🗑 Delete';
+        deleteBtn.onclick = () => deleteMessageFromDB(msgId, wrapper);
+        actions.appendChild(deleteBtn);
+      }
 
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'msg-action-btn';
-      deleteBtn.textContent = '🗑 Delete';
-      deleteBtn.onclick = () => deleteMessage(msgId, wrapper);
-
-      actions.appendChild(deleteBtn);
+      wrapper.appendChild(label);
       wrapper.appendChild(el);
       wrapper.appendChild(actions);
       chatBox.appendChild(wrapper);
@@ -301,10 +471,24 @@
       const msg = input.value.trim();
       if (!msg || sendBtn.disabled) return;
 
-      const userMsgId = await saveMessage('user', msg);
-      appendMessage(userMsgId, msg, 'user');
+      const empty = document.getElementById('empty-state');
+      if (empty) empty.remove();
+
       input.value = '';
       sendBtn.disabled = true;
+
+      const userMsgId = await saveMessage('user', msg);
+      appendMessage(userMsgId, msg, 'user');
+
+      // Update session title
+      document.getElementById('chat-title').textContent = msg.slice(0, 50);
+
+      // Add to sessions list if new
+      if (!sessions.find(s => s.id === sessionId)) {
+        sessions.unshift({ id: sessionId, first: msg, date: new Date().toISOString() });
+        renderSessions();
+        document.querySelectorAll('.session-item')[0]?.classList.add('active');
+      }
 
       const typing = document.createElement('div');
       typing.className = 'typing';
@@ -332,15 +516,11 @@
           if (data.error) throw new Error(data.error.message);
           reply = data.candidates[0].content.parts[0].text;
           history.push({ role: "model", parts: [{ text: reply }] });
-
         } else {
           history.push({ role: "user", content: msg });
           const res = await fetch('https://api.deepseek.com/chat/completions', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${DEEPSEEK_KEY}`
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DEEPSEEK_KEY}` },
             body: JSON.stringify({
               model: "deepseek-chat",
               messages: [{ role: "system", content: MASTER_CONTEXT }, ...history]
@@ -365,24 +545,20 @@
       input.focus();
     }
 
-    async function clearChat() {
-      if (!confirm('Delete all messages in this session?')) return;
-      try {
-        await fetch(`${SUPABASE_URL}/rest/v1/messages?session_id=eq.${sessionId}`, {
-          method: 'DELETE',
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-        });
-      } catch (err) {}
-      sessionId = 'session_' + Date.now();
-      localStorage.setItem('chat_session_id', sessionId);
-      history = [];
-      chatBox.innerHTML = '';
-      appendMessage(null, 'Chat cleared! Starting fresh.', 'ai');
-      setStatus('New session started', '');
+    input.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+
+    // Init
+    async function init() {
+      await loadSessions();
+      const saved = localStorage.getItem('chat_session_id');
+      if (saved && sessions.find(s => s.id === saved)) {
+        loadSession(saved);
+      } else {
+        newChat();
+      }
     }
 
-    input.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
-    loadHistory();
+    init();
   </script>
 
 </body>
