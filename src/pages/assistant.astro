@@ -1,0 +1,365 @@
+---
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Assistant | Madhva Fakare</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    .top-bar {
+      width: 100%;
+      max-width: 750px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .top-bar a { color: #888; text-decoration: none; font-size: 0.85rem; }
+    .top-bar a:hover { color: #fff; }
+    h1 { font-size: 1.4rem; margin-bottom: 6px; }
+    .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 12px; text-align: center; }
+    .model-switcher { display: flex; gap: 8px; margin-bottom: 12px; }
+    .model-btn {
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+      color: #888;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .model-btn.active { background: #0070f3; color: white; border-color: #0070f3; }
+    .model-btn:hover:not(.active) { background: #2a2a2a; color: #ccc; }
+    #chat-box {
+      width: 100%;
+      max-width: 750px;
+      flex: 1;
+      overflow-y: auto;
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .msg {
+      padding: 10px 14px;
+      border-radius: 10px;
+      max-width: 85%;
+      line-height: 1.6;
+      font-size: 0.92rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .user-msg { background: #0070f3; color: white; align-self: flex-end; }
+    .ai-msg { background: #2a2a2a; color: #e0e0e0; align-self: flex-start; }
+    .typing {
+      background: #2a2a2a;
+      color: #888;
+      align-self: flex-start;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-style: italic;
+      font-size: 0.85rem;
+    }
+    .session-divider {
+      text-align: center;
+      color: #444;
+      font-size: 0.75rem;
+      margin: 4px 0;
+    }
+    #input-row { display: flex; width: 100%; max-width: 750px; gap: 8px; }
+    #user-input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    #user-input:focus { border-color: #0070f3; }
+    button {
+      padding: 12px 20px;
+      background: #0070f3;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+    button:hover { background: #005bb5; }
+    button:disabled { background: #333; cursor: not-allowed; }
+    .clear-btn { background: #2a2a2a; font-size: 0.8rem; padding: 6px 12px; }
+    .clear-btn:hover { background: #333; }
+    .status-bar {
+      font-size: 0.75rem;
+      color: #444;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .status-bar.saved { color: #22c55e; }
+    .status-bar.error { color: #ef4444; }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <a href="/">← Back to site</a>
+    <button class="clear-btn" onclick="clearChat()">Clear chat</button>
+  </div>
+
+  <h1>🔬 Physics AI Assistant</h1>
+  <p class="subtitle">Pre-loaded with ALICE/TRD context · Gemini & DeepSeek · History saved</p>
+
+  <div class="model-switcher">
+    <button class="model-btn active" onclick="switchModel('gemini')" id="btn-gemini">✨ Gemini (Free)</button>
+    <button class="model-btn" onclick="switchModel('deepseek')" id="btn-deepseek">🧠 DeepSeek R1</button>
+  </div>
+
+  <div id="status-bar" class="status-bar">Loading history...</div>
+
+  <div id="chat-box"></div>
+
+  <div id="input-row">
+    <input id="user-input" type="text" placeholder="Ask about ROOT, O2Physics, TRD..." autocomplete="off"/>
+    <button id="send-btn" onclick="sendMessage()">Send</button>
+  </div>
+
+  <script is:inline>
+    const MASTER_CONTEXT = `You are a specialist physics AI assistant for Madhva Fakare, an MSc Physics student in Münster, Germany. Project: electron-pion separation using the TRD in ALICE at CERN. Stack: ROOT, O2Physics, lxplus/CVMFS, AO2D Run 3 data, BDT for particle ID, alice-trd-analysis GitHub repo. Focus: tpcSkimsTableCreator.cxx, CERNBox data, BDT ML pipeline, fSigned1Pt variable. Environment: M1 MacBook Sonoma, VS Code SSH to lxplus. Always give precise graduate-level technical answers. Default to C++ ROOT/O2Physics unless Python requested.`;
+
+    const GEMINI_KEY = 'AIzaSyB1tRIJQMuVWIicRYJscrl1n57bpNWpJiI';
+    const DEEPSEEK_KEY = 'sk-b8653889f21b4f86bec501d959c3ef6e';
+
+    const SUPABASE_URL = 'https://fvwpzmnjejxmzaczkpde.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_Ayveuh9J65cAG6Yi9QLZgA_PP5i_GaK';
+
+    // Generate or retrieve session ID
+    let sessionId = localStorage.getItem('chat_session_id');
+    if (!sessionId) {
+      sessionId = 'session_' + Date.now();
+      localStorage.setItem('chat_session_id', sessionId);
+    }
+
+    let model = 'gemini';
+    let history = [];
+
+    const chatBox = document.getElementById('chat-box');
+    const input = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const statusBar = document.getElementById('status-bar');
+
+    // ── SUPABASE HELPERS ─────────────────────────────────────
+    async function saveMessage(role, content) {
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            role,
+            content,
+            model,
+            session_id: sessionId
+          })
+        });
+        setStatus('✓ Saved', 'saved');
+      } catch (err) {
+        setStatus('⚠ Save failed', 'error');
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/messages?session_id=eq.${sessionId}&order=created_at.asc`,
+          {
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+          }
+        );
+        const messages = await res.json();
+
+        if (!messages || messages.length === 0) {
+          appendMessage('Hi Madhva! I\'m pre-loaded with your full ALICE TRD project context. Use the buttons above to switch between Gemini and DeepSeek R1. Ask me anything!', 'ai-msg');
+          setStatus('New session started', '');
+          return;
+        }
+
+        // Restore messages to screen and history
+        messages.forEach(m => {
+          appendMessage(m.content, m.role === 'user' ? 'user-msg' : 'ai-msg');
+          if (m.role === 'user') {
+            if (model === 'gemini') {
+              history.push({ role: 'user', parts: [{ text: m.content }] });
+            } else {
+              history.push({ role: 'user', content: m.content });
+            }
+          } else {
+            if (model === 'gemini') {
+              history.push({ role: 'model', parts: [{ text: m.content }] });
+            } else {
+              history.push({ role: 'assistant', content: m.content });
+            }
+          }
+        });
+
+        setStatus(`✓ Loaded ${messages.length} messages from history`, 'saved');
+        setTimeout(() => setStatus('', ''), 3000);
+
+      } catch (err) {
+        appendMessage('Hi Madhva! Could not load history. Ask me anything!', 'ai-msg');
+        setStatus('⚠ Could not load history', 'error');
+      }
+    }
+
+    function setStatus(msg, type) {
+      statusBar.textContent = msg;
+      statusBar.className = 'status-bar' + (type ? ' ' + type : '');
+    }
+    // ─────────────────────────────────────────────────────────
+
+    function switchModel(m) {
+      model = m;
+      history = [];
+      document.getElementById('btn-gemini').classList.toggle('active', m === 'gemini');
+      document.getElementById('btn-deepseek').classList.toggle('active', m === 'deepseek');
+      chatBox.innerHTML = '';
+      appendMessage(`Switched to ${m === 'gemini' ? '✨ Gemini 1.5 Pro' : '🧠 DeepSeek R1'}! Ask me anything about your ALICE/TRD project.`, 'ai-msg');
+      setStatus('Model switched — new messages will be saved', '');
+    }
+
+    async function sendMessage() {
+      const msg = input.value.trim();
+      if (!msg || sendBtn.disabled) return;
+
+      appendMessage(msg, 'user-msg');
+      await saveMessage('user', msg);
+      input.value = '';
+      sendBtn.disabled = true;
+
+      const typing = document.createElement('div');
+      typing.className = 'typing';
+      typing.textContent = model === 'gemini' ? '✨ Gemini thinking...' : '🧠 DeepSeek thinking...';
+      chatBox.appendChild(typing);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        let reply = '';
+
+        if (model === 'gemini') {
+          history.push({ role: "user", parts: [{ text: msg }] });
+          const res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                system_instruction: { parts: [{ text: MASTER_CONTEXT }] },
+                contents: history
+              })
+            }
+          );
+          const data = await res.json();
+          if (data.error) throw new Error(data.error.message);
+          reply = data.candidates[0].content.parts[0].text;
+          history.push({ role: "model", parts: [{ text: reply }] });
+
+        } else {
+          history.push({ role: "user", content: msg });
+          const res = await fetch('https://api.deepseek.com/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${DEEPSEEK_KEY}`
+            },
+            body: JSON.stringify({
+              model: "deepseek-chat",
+              messages: [
+                { role: "system", content: MASTER_CONTEXT },
+                ...history
+              ]
+            })
+          });
+          const data = await res.json();
+          if (data.error) throw new Error(data.error.message);
+          reply = data.choices[0].message.content;
+          history.push({ role: "assistant", content: reply });
+        }
+
+        chatBox.removeChild(typing);
+        appendMessage(reply, 'ai-msg');
+        await saveMessage('assistant', reply);
+
+      } catch (err) {
+        chatBox.removeChild(typing);
+        appendMessage('Error: ' + err.message, 'ai-msg');
+      }
+
+      sendBtn.disabled = false;
+      input.focus();
+    }
+
+    function appendMessage(text, cls) {
+      const el = document.createElement('div');
+      el.className = 'msg ' + cls;
+      el.textContent = text;
+      chatBox.appendChild(el);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function clearChat() {
+      // Clear from Supabase
+      try {
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/messages?session_id=eq.${sessionId}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+          }
+        );
+      } catch (err) {}
+
+      // Generate new session
+      sessionId = 'session_' + Date.now();
+      localStorage.setItem('chat_session_id', sessionId);
+      history = [];
+      chatBox.innerHTML = '';
+      appendMessage('Chat cleared! Starting fresh session. Ask me anything.', 'ai-msg');
+      setStatus('New session started', '');
+    }
+
+    input.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+
+    // Load history on page load
+    loadHistory();
+  </script>
+
+</body>
+</html>
