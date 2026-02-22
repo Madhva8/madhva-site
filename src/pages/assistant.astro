@@ -56,6 +56,13 @@
       flex-direction: column;
       gap: 12px;
     }
+    .msg-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .msg-wrapper.user { align-items: flex-end; }
+    .msg-wrapper.ai { align-items: flex-start; }
     .msg {
       padding: 10px 14px;
       border-radius: 10px;
@@ -65,8 +72,26 @@
       white-space: pre-wrap;
       word-wrap: break-word;
     }
-    .user-msg { background: #0070f3; color: white; align-self: flex-end; }
-    .ai-msg { background: #2a2a2a; color: #e0e0e0; align-self: flex-start; }
+    .user-msg { background: #0070f3; color: white; }
+    .ai-msg { background: #2a2a2a; color: #e0e0e0; }
+    .msg-actions {
+      display: flex;
+      gap: 6px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .msg-wrapper:hover .msg-actions { opacity: 1; }
+    .msg-action-btn {
+      background: none;
+      border: none;
+      color: #555;
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .msg-action-btn:hover { background: #2a2a2a; color: #e0e0e0; }
     .typing {
       background: #2a2a2a;
       color: #888;
@@ -75,12 +100,6 @@
       border-radius: 10px;
       font-style: italic;
       font-size: 0.85rem;
-    }
-    .session-divider {
-      text-align: center;
-      color: #444;
-      font-size: 0.75rem;
-      margin: 4px 0;
     }
     #input-row { display: flex; width: 100%; max-width: 750px; gap: 8px; }
     #user-input {
@@ -107,7 +126,7 @@
     button:hover { background: #005bb5; }
     button:disabled { background: #333; cursor: not-allowed; }
     .clear-btn { background: #2a2a2a; font-size: 0.8rem; padding: 6px 12px; }
-    .clear-btn:hover { background: #333; }
+    .clear-btn:hover { background: #3a2a2a; color: #ff6b6b; }
     .status-bar {
       font-size: 0.75rem;
       color: #444;
@@ -122,19 +141,18 @@
 
   <div class="top-bar">
     <a href="/">← Back to site</a>
-    <button class="clear-btn" onclick="clearChat()">Clear chat</button>
+    <button class="clear-btn" onclick="clearChat()">🗑 Clear all</button>
   </div>
 
   <h1>🔬 Physics AI Assistant</h1>
   <p class="subtitle">Pre-loaded with ALICE/TRD context · Gemini & DeepSeek · History saved</p>
 
   <div class="model-switcher">
-    <button class="model-btn active" onclick="switchModel('gemini')" id="btn-gemini">✨ Gemini (Free)</button>
-    <button class="model-btn" onclick="switchModel('deepseek')" id="btn-deepseek">🧠 DeepSeek R1</button>
+    <button class="model-btn active" onclick="switchModel('gemini')" id="btn-gemini">✨ Gemini 2.5 Flash</button>
+    <button class="model-btn" onclick="switchModel('deepseek')" id="btn-deepseek">🧠 DeepSeek</button>
   </div>
 
   <div id="status-bar" class="status-bar">Loading history...</div>
-
   <div id="chat-box"></div>
 
   <div id="input-row">
@@ -151,7 +169,6 @@
     const SUPABASE_URL = 'https://fvwpzmnjejxmzaczkpde.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_Ayveuh9J65cAG6Yi9QLZgA_PP5i_GaK';
 
-    // Generate or retrieve session ID
     let sessionId = localStorage.getItem('chat_session_id');
     if (!sessionId) {
       sessionId = 'session_' + Date.now();
@@ -160,33 +177,50 @@
 
     let model = 'gemini';
     let history = [];
+    let messageIds = []; // track supabase IDs for deletion
 
     const chatBox = document.getElementById('chat-box');
     const input = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
     const statusBar = document.getElementById('status-bar');
 
-    // ── SUPABASE HELPERS ─────────────────────────────────────
     async function saveMessage(role, content) {
       try {
-        await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'apikey': SUPABASE_KEY,
             'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer': 'return=minimal'
+            'Prefer': 'return=representation'
           },
-          body: JSON.stringify({
-            role,
-            content,
-            model,
-            session_id: sessionId
-          })
+          body: JSON.stringify({ role, content, model, session_id: sessionId })
         });
+        const data = await res.json();
         setStatus('✓ Saved', 'saved');
+        setTimeout(() => setStatus('', ''), 2000);
+        return data[0]?.id || null;
       } catch (err) {
         setStatus('⚠ Save failed', 'error');
+        return null;
+      }
+    }
+
+    async function deleteMessage(msgId, wrapperEl) {
+      if (!msgId) return;
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/messages?id=eq.${msgId}`, {
+          method: 'DELETE',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          }
+        });
+        wrapperEl.remove();
+        setStatus('Message deleted', '');
+        setTimeout(() => setStatus('', ''), 2000);
+      } catch (err) {
+        setStatus('⚠ Delete failed', 'error');
       }
     }
 
@@ -194,44 +228,33 @@
       try {
         const res = await fetch(
           `${SUPABASE_URL}/rest/v1/messages?session_id=eq.${sessionId}&order=created_at.asc`,
-          {
-            headers: {
-              'apikey': SUPABASE_KEY,
-              'Authorization': `Bearer ${SUPABASE_KEY}`
-            }
-          }
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
         );
         const messages = await res.json();
 
         if (!messages || messages.length === 0) {
-          appendMessage('Hi Madhva! I\'m pre-loaded with your full ALICE TRD project context. Use the buttons above to switch between Gemini and DeepSeek R1. Ask me anything!', 'ai-msg');
-          setStatus('New session started', '');
+          appendMessage(null, 'Hi Madhva! I\'m pre-loaded with your ALICE TRD project context. Ask me anything!', 'ai');
+          setStatus('New session', '');
           return;
         }
 
-        // Restore messages to screen and history
         messages.forEach(m => {
-          appendMessage(m.content, m.role === 'user' ? 'user-msg' : 'ai-msg');
+          appendMessage(m.id, m.content, m.role === 'user' ? 'user' : 'ai');
           if (m.role === 'user') {
-            if (model === 'gemini') {
-              history.push({ role: 'user', parts: [{ text: m.content }] });
-            } else {
-              history.push({ role: 'user', content: m.content });
-            }
+            history.push(model === 'gemini'
+              ? { role: 'user', parts: [{ text: m.content }] }
+              : { role: 'user', content: m.content });
           } else {
-            if (model === 'gemini') {
-              history.push({ role: 'model', parts: [{ text: m.content }] });
-            } else {
-              history.push({ role: 'assistant', content: m.content });
-            }
+            history.push(model === 'gemini'
+              ? { role: 'model', parts: [{ text: m.content }] }
+              : { role: 'assistant', content: m.content });
           }
         });
 
-        setStatus(`✓ Loaded ${messages.length} messages from history`, 'saved');
+        setStatus(`✓ Loaded ${messages.length} messages`, 'saved');
         setTimeout(() => setStatus('', ''), 3000);
-
       } catch (err) {
-        appendMessage('Hi Madhva! Could not load history. Ask me anything!', 'ai-msg');
+        appendMessage(null, 'Could not load history. Ask me anything!', 'ai');
         setStatus('⚠ Could not load history', 'error');
       }
     }
@@ -240,7 +263,6 @@
       statusBar.textContent = msg;
       statusBar.className = 'status-bar' + (type ? ' ' + type : '');
     }
-    // ─────────────────────────────────────────────────────────
 
     function switchModel(m) {
       model = m;
@@ -248,16 +270,39 @@
       document.getElementById('btn-gemini').classList.toggle('active', m === 'gemini');
       document.getElementById('btn-deepseek').classList.toggle('active', m === 'deepseek');
       chatBox.innerHTML = '';
-      appendMessage(`Switched to ${m === 'gemini' ? '✨ Gemini 1.5 Pro' : '🧠 DeepSeek R1'}! Ask me anything about your ALICE/TRD project.`, 'ai-msg');
-      setStatus('Model switched — new messages will be saved', '');
+      appendMessage(null, `Switched to ${m === 'gemini' ? '✨ Gemini 2.5 Flash' : '🧠 DeepSeek'}!`, 'ai');
+    }
+
+    function appendMessage(msgId, text, type) {
+      const wrapper = document.createElement('div');
+      wrapper.className = `msg-wrapper ${type}`;
+
+      const el = document.createElement('div');
+      el.className = `msg ${type === 'user' ? 'user-msg' : 'ai-msg'}`;
+      el.textContent = text;
+
+      const actions = document.createElement('div');
+      actions.className = 'msg-actions';
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'msg-action-btn';
+      deleteBtn.textContent = '🗑 Delete';
+      deleteBtn.onclick = () => deleteMessage(msgId, wrapper);
+
+      actions.appendChild(deleteBtn);
+      wrapper.appendChild(el);
+      wrapper.appendChild(actions);
+      chatBox.appendChild(wrapper);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      return wrapper;
     }
 
     async function sendMessage() {
       const msg = input.value.trim();
       if (!msg || sendBtn.disabled) return;
 
-      appendMessage(msg, 'user-msg');
-      await saveMessage('user', msg);
+      const userMsgId = await saveMessage('user', msg);
+      appendMessage(userMsgId, msg, 'user');
       input.value = '';
       sendBtn.disabled = true;
 
@@ -298,10 +343,7 @@
             },
             body: JSON.stringify({
               model: "deepseek-chat",
-              messages: [
-                { role: "system", content: MASTER_CONTEXT },
-                ...history
-              ]
+              messages: [{ role: "system", content: MASTER_CONTEXT }, ...history]
             })
           });
           const data = await res.json();
@@ -311,53 +353,35 @@
         }
 
         chatBox.removeChild(typing);
-        appendMessage(reply, 'ai-msg');
-        await saveMessage('assistant', reply);
+        const aiMsgId = await saveMessage('assistant', reply);
+        appendMessage(aiMsgId, reply, 'ai');
 
       } catch (err) {
         chatBox.removeChild(typing);
-        appendMessage('Error: ' + err.message, 'ai-msg');
+        appendMessage(null, 'Error: ' + err.message, 'ai');
       }
 
       sendBtn.disabled = false;
       input.focus();
     }
 
-    function appendMessage(text, cls) {
-      const el = document.createElement('div');
-      el.className = 'msg ' + cls;
-      el.textContent = text;
-      chatBox.appendChild(el);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
     async function clearChat() {
-      // Clear from Supabase
+      if (!confirm('Delete all messages in this session?')) return;
       try {
-        await fetch(
-          `${SUPABASE_URL}/rest/v1/messages?session_id=eq.${sessionId}`,
-          {
-            method: 'DELETE',
-            headers: {
-              'apikey': SUPABASE_KEY,
-              'Authorization': `Bearer ${SUPABASE_KEY}`
-            }
-          }
-        );
+        await fetch(`${SUPABASE_URL}/rest/v1/messages?session_id=eq.${sessionId}`, {
+          method: 'DELETE',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
       } catch (err) {}
-
-      // Generate new session
       sessionId = 'session_' + Date.now();
       localStorage.setItem('chat_session_id', sessionId);
       history = [];
       chatBox.innerHTML = '';
-      appendMessage('Chat cleared! Starting fresh session. Ask me anything.', 'ai-msg');
+      appendMessage(null, 'Chat cleared! Starting fresh.', 'ai');
       setStatus('New session started', '');
     }
 
     input.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
-
-    // Load history on page load
     loadHistory();
   </script>
 
