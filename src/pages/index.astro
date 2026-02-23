@@ -405,8 +405,8 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     else if (t<0.76){color=C.photon;  maxR=D.tpcOuter*0.7*R;curv=0;}
     else            {color=C.proton;  maxR=D.tpcOuter*0.85*R;curv=(Math.random()>0.5?1:-1)*(0.02+Math.random()*0.03);}
 
-    // Step size: larger = fewer points = faster to draw
-    const step = 4;
+    // Step size: smaller = denser points = smoother slow reveal
+    const step = 2.5;
     const pts=[];
     let vx=Math.cos(angle)*step, vy=Math.sin(angle)*step;
     let px=cx, py=cy;
@@ -567,8 +567,8 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // Hits
     drawHits();
 
-    // Tracks — reveal 8 points per frame per track, draw only new segment (not full path)
-    const STEP=8;
+    // Tracks — reveal points per frame per track, draw only new segment (not full path)
+    const STEP=3;
     tracks=tracks.filter(tr=>{
       const prev=tr.drawTo;
       tr.drawTo=Math.min(tr.pts.length, tr.drawTo+STEP*2); // *2 because flat array pairs
