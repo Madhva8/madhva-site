@@ -665,7 +665,7 @@
           history.push({ role: "user", content: msg });
           const res = await fetch('/api/deepseek', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },,
+  headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               model: "deepseek-chat",
               messages: [{ role: "system", content: MASTER_CONTEXT }, ...history]
