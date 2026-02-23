@@ -330,9 +330,6 @@
 
   <script is:inline>
     const MASTER_CONTEXT = `You are a specialist physics AI assistant for Madhva Fakare, an MSc Physics student in Münster, Germany. Project: electron-pion separation using the TRD in ALICE at CERN. Stack: ROOT, O2Physics, lxplus/CVMFS, AO2D Run 3 data, BDT for particle ID, alice-trd-analysis GitHub repo. Focus: tpcSkimsTableCreator.cxx, CERNBox data, BDT ML pipeline, fSigned1Pt variable. Environment: M1 MacBook Sonoma, VS Code SSH to lxplus. Always give precise graduate-level technical answers. Default to C++ ROOT/O2Physics unless Python requested.`;
-
-    const GEMINI_KEY = 'AIzaSyDJn8crTQ0kSwuRmKlh56B6Eu62DQ5SHTo';
-    const DEEPSEEK_KEY = 'sk-b8653889f21b4f86bec501d959c3ef6e';
     const SUPABASE_URL = 'https://fvwpzmnjejxmzaczkpde.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_Ayveuh9J65cAG6Yi9QLZgA_PP5i_GaK';
 
@@ -540,10 +537,12 @@
         const msgs = await res.json();
         msgs.forEach(m => {
           appendMessage(m.id, m.content, m.role === 'user' ? 'user' : 'ai', m.model);
-          history.push(model === 'gemini'
-            ? (m.role === 'user' ? { role:'user', parts:[{text:m.content}] } : { role:'model', parts:[{text:m.content}] })
-            : { role: m.role === 'assistant' ? 'assistant' : m.role, content: m.content }
-          );
+          if (m.content) {
+  history.push(model === 'gemini'
+    ? (m.role === 'user' ? { role:'user', parts:[{text:m.content}] } : { role:'model', parts:[{text:m.content}] })
+    : { role: m.role === 'assistant' ? 'assistant' : m.role, content: m.content }
+  );
+}
         });
         const firstMsg = msgs.find(m => m.role === 'user');
         document.getElementById('chat-title').textContent = firstMsg?.content?.slice(0, 50) || 'Conversation';
@@ -648,7 +647,7 @@
         if (model === 'gemini') {
           history.push({ role: "user", parts: [{ text: msg }] });
           const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
+            `/api/gemini`,
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -664,9 +663,9 @@
           history.push({ role: "model", parts: [{ text: reply }] });
         } else {
           history.push({ role: "user", content: msg });
-          const res = await fetch('https://api.deepseek.com/chat/completions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DEEPSEEK_KEY}` },
+          const res = await fetch('/api/deepseek', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },,
             body: JSON.stringify({
               model: "deepseek-chat",
               messages: [{ role: "system", content: MASTER_CONTEXT }, ...history]
