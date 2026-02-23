@@ -286,7 +286,7 @@
   </div>
 
   <!-- CHAT APP (hidden until logged in) -->
-  <div id="app" style="display:none; width:100%; height:100vh; overflow:hidden; display:none;">
+  <div id="app" style="display:none; width:100%; height:100vh; overflow:hidden;">
     <div style="display:flex; width:100%; height:100vh;">
 
       <div id="sidebar">
@@ -329,11 +329,13 @@
   </div>
 
   <script is:inline>
-    const MASTER_CONTEXT = `You are a specialist physics AI assistant for Madhva Fakare, an MSc Physics student in Münster, Germany. Project: electron-pion separation using the TRD in ALICE at CERN. Stack: ROOT, O2Physics, lxplus/CVMFS, AO2D Run 3 data, BDT for particle ID, alice-trd-analysis GitHub repo. Focus: tpcSkimsTableCreator.cxx, CERNBox data, BDT ML pipeline, fSigned1Pt variable. Environment: M1 MacBook Sonoma, VS Code SSH to lxplus. Always give precise graduate-level technical answers. Default to C++ ROOT/O2Physics unless Python requested.`;
+    const MASTER_CONTEXT = "You are a specialist physics AI assistant for Madhva Fakare, an MSc Physics student in Munster, Germany. Project: electron-pion separation using the TRD in ALICE at CERN. Stack: ROOT, O2Physics, lxplus/CVMFS, AO2D Run 3 data, BDT for particle ID, alice-trd-analysis GitHub repo. Focus: tpcSkimsTableCreator.cxx, CERNBox data, BDT ML pipeline, fSigned1Pt variable. Environment: M1 MacBook Sonoma, VS Code SSH to lxplus. Always give precise graduate-level technical answers. Default to C++ ROOT/O2Physics unless Python requested.";
     const SUPABASE_URL = 'https://fvwpzmnjejxmzaczkpde.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_Ayveuh9J65cAG6Yi9QLZgA_PP5i_GaK';
 
     let model = 'gemini';
+    // history stores dual-format: each entry has both gemini and deepseek fields
+    // { geminiRole, geminiParts, dsRole, content }
     let history = [];
     let sessionId = null;
     let sessions = [];
@@ -456,9 +458,9 @@
           body: JSON.stringify({ role, content, model, session_id: sessionId })
         });
         const data = await res.json();
-        setStatus('✓ Saved', 'saved');
+        setStatus('Saved', 'saved');
         return data[0]?.id || null;
-      } catch { setStatus('⚠ Save failed', 'error'); return null; }
+      } catch { setStatus('Save failed', 'error'); return null; }
     }
 
     async function deleteMessageFromDB(msgId, wrapperEl) {
@@ -469,7 +471,7 @@
         });
         wrapperEl.remove();
         setStatus('Message deleted', '');
-      } catch { setStatus('⚠ Delete failed', 'error'); }
+      } catch { setStatus('Delete failed', 'error'); }
     }
 
     async function loadSessions() {
@@ -510,7 +512,7 @@
 
         const del = document.createElement('button');
         del.className = 'session-delete';
-        del.textContent = '✕';
+        del.textContent = 'x';
         del.onclick = (e) => { e.stopPropagation(); deleteSession(s.id, el); };
 
         el.appendChild(title);
@@ -536,18 +538,21 @@
         );
         const msgs = await res.json();
         msgs.forEach(m => {
+          if (!m.content) return;
           appendMessage(m.id, m.content, m.role === 'user' ? 'user' : 'ai', m.model);
-          if (m.content) {
-  history.push(model === 'gemini'
-    ? (m.role === 'user' ? { role:'user', parts:[{text:m.content}] } : { role:'model', parts:[{text:m.content}] })
-    : { role: m.role === 'assistant' ? 'assistant' : m.role, content: m.content }
-  );
-}
+          // Store in dual format so both models can use history
+          const isUser = m.role === 'user';
+          history.push({
+            geminiRole: isUser ? 'user' : 'model',
+            geminiParts: [{ text: m.content }],
+            dsRole: isUser ? 'user' : 'assistant',
+            content: m.content
+          });
         });
         const firstMsg = msgs.find(m => m.role === 'user');
         document.getElementById('chat-title').textContent = firstMsg?.content?.slice(0, 50) || 'Conversation';
         setStatus(`Loaded ${msgs.length} messages`, 'saved');
-      } catch { setStatus('⚠ Could not load session', 'error'); }
+      } catch { setStatus('Could not load session', 'error'); }
     }
 
     async function deleteSession(id, el) {
@@ -561,7 +566,7 @@
         sessions = sessions.filter(s => s.id !== id);
         if (id === sessionId) newChat();
         setStatus('Session deleted', '');
-      } catch { setStatus('⚠ Delete failed', 'error'); }
+      } catch { setStatus('Delete failed', 'error'); }
     }
 
     function newChat() {
@@ -582,7 +587,7 @@
       model = m;
       document.getElementById('btn-gemini').classList.toggle('active', m === 'gemini');
       document.getElementById('btn-deepseek').classList.toggle('active', m === 'deepseek');
-      setStatus(`Switched to ${m === 'gemini' ? 'Gemini 2.5 Flash' : 'DeepSeek'}`, '');
+      setStatus('Switched to ' + (m === 'gemini' ? 'Gemini 2.5 Flash' : 'DeepSeek'), '');
     }
 
     function appendMessage(msgId, text, type, msgModel) {
@@ -590,14 +595,14 @@
       if (empty) empty.remove();
 
       const wrapper = document.createElement('div');
-      wrapper.className = `msg-wrapper ${type}`;
+      wrapper.className = 'msg-wrapper ' + type;
 
       const label = document.createElement('div');
       label.className = 'msg-label';
-      label.textContent = type === 'user' ? 'You' : (msgModel === 'deepseek' ? '🧠 DeepSeek' : '✨ Gemini 2.5 Flash');
+      label.textContent = type === 'user' ? 'You' : (msgModel === 'deepseek' ? 'DeepSeek' : 'Gemini 2.5 Flash');
 
       const el = document.createElement('div');
-      el.className = `msg ${type === 'user' ? 'user-msg' : 'ai-msg'}`;
+      el.className = 'msg ' + (type === 'user' ? 'user-msg' : 'ai-msg');
       el.textContent = text;
 
       const actions = document.createElement('div');
@@ -605,7 +610,7 @@
       if (msgId) {
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'msg-action-btn';
-        deleteBtn.textContent = '🗑 Delete';
+        deleteBtn.textContent = 'Delete';
         deleteBtn.onclick = () => deleteMessageFromDB(msgId, wrapper);
         actions.appendChild(deleteBtn);
       }
@@ -637,51 +642,65 @@
 
       const typing = document.createElement('div');
       typing.className = 'typing';
-      typing.textContent = model === 'gemini' ? '✨ Gemini thinking...' : '🧠 DeepSeek thinking...';
+      typing.textContent = model === 'gemini' ? 'Gemini thinking...' : 'DeepSeek thinking...';
       chatBox.appendChild(typing);
       chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Add to history in dual format
+      history.push({
+        geminiRole: 'user',
+        geminiParts: [{ text: msg }],
+        dsRole: 'user',
+        content: msg
+      });
 
       try {
         let reply = '';
 
         if (model === 'gemini') {
-          history.push({ role: "user", parts: [{ text: msg }] });
-          const res = await fetch(
-            `/api/gemini`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                system_instruction: { parts: [{ text: MASTER_CONTEXT }] },
-                contents: history
-              })
-            }
-          );
+          const geminiHistory = history.map(h => ({ role: h.geminiRole, parts: h.geminiParts }));
+          const res = await fetch('/api/gemini', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              system_instruction: { parts: [{ text: MASTER_CONTEXT }] },
+              contents: geminiHistory
+            })
+          });
           const data = await res.json();
           if (data.error) throw new Error(data.error.message);
           reply = data.candidates[0].content.parts[0].text;
-          history.push({ role: "model", parts: [{ text: reply }] });
+
         } else {
-          history.push({ role: "user", content: msg });
+          const dsHistory = history.map(h => ({ role: h.dsRole, content: h.content }));
           const res = await fetch('/api/deepseek', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               model: "deepseek-chat",
-              messages: [{ role: "system", content: MASTER_CONTEXT }, ...history]
+              messages: [{ role: "system", content: MASTER_CONTEXT }, ...dsHistory]
             })
           });
           const data = await res.json();
           if (data.error) throw new Error(data.error.message);
           reply = data.choices[0].message.content;
-          history.push({ role: "assistant", content: reply });
         }
+
+        // Add AI reply to history in dual format
+        history.push({
+          geminiRole: 'model',
+          geminiParts: [{ text: reply }],
+          dsRole: 'assistant',
+          content: reply
+        });
 
         chatBox.removeChild(typing);
         const aiMsgId = await saveMessage('assistant', reply);
         appendMessage(aiMsgId, reply, 'ai', model);
 
       } catch (err) {
+        // Remove failed user message from history
+        history.pop();
         chatBox.removeChild(typing);
         appendMessage(null, 'Error: ' + err.message, 'ai', model);
       }
@@ -707,19 +726,13 @@
       const stored = localStorage.getItem('sb_access_token');
       if (stored) {
         accessToken = stored;
-        // Verify token is still valid
         const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${accessToken}` }
         });
-        if (res.ok) {
-          showApp();
-          return;
-        }
-        // Try refresh
+        if (res.ok) { showApp(); return; }
         const refreshed = await refreshToken();
         if (refreshed) { showApp(); return; }
       }
-      // Show login
       document.getElementById('login-screen').style.display = 'flex';
     }
 
