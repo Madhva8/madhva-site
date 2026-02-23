@@ -20,65 +20,47 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
   <main>
 
-    <!-- HERO: full-screen, content over canvas -->
+    <!-- HERO: pure animation viewport, NO text on top -->
     <section class="hero">
-      <div class="hero-content">
-        <div class="badge">
-          <span class="badge-dot"></span>
-          ALICE Experiment · CERN · Münster
-        </div>
-        <h1>
-          Hi, I'm<br>
-          <span class="name">Madhva Fakare</span>
-        </h1>
-        <p class="tagline">
-          MSc Physics student building machine learning pipelines<br class="br-desktop">
-          for electron-pion separation using the TRD at CERN.
-        </p>
-        <div class="hero-actions">
-          <a href="/assistant" class="btn-primary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-            Physics AI Assistant
-          </a>
-          <a href="https://github.com/madhva8" target="_blank" class="btn-secondary">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-            GitHub
-          </a>
-        </div>
-        <div class="hero-hint">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"/></svg>
-          Click anywhere to trigger a particle collision
-        </div>
+      <!-- Minimal HUD — bottom corners only -->
+      <div class="hud-corner hud-tl">
+        <span class="hud-mono">ALICE · Pb+Pb · √s=5.5 TeV</span>
       </div>
-
-      <!-- HUD overlay: detector info -->
-      <div class="detector-hud">
-        <div class="hud-item">
-          <span class="hud-label">Experiment</span>
-          <span class="hud-value">ALICE · LHC</span>
-        </div>
-        <div class="hud-item">
-          <span class="hud-label">Collision</span>
-          <span class="hud-value">Pb+Pb</span>
-        </div>
-        <div class="hud-item">
-          <span class="hud-label">Energy</span>
-          <span class="hud-value">√s = 5.5 TeV</span>
-        </div>
-        <div class="hud-item">
-          <span class="hud-label">Tracks</span>
-          <span class="hud-value" id="track-count">0</span>
-        </div>
+      <div class="hud-corner hud-tr">
+        <span class="hud-mono">N₀ tracks: <span id="track-count">0</span></span>
       </div>
-
-      <div class="scroll-indicator">
-        <span>Scroll</span>
-        <div class="scroll-arrow"></div>
+      <div class="hud-corner hud-br">
+        <span class="hud-mono hint-pulse">↓ scroll to explore</span>
+      </div>
+      <div class="hud-corner hud-bl">
+        <span class="hud-mono hint-click">⊕ click to collide</span>
       </div>
     </section>
 
-    <!-- CONTENT SECTIONS on white background -->
+    <!-- PARALLAX CONTENT: slides up over the fixed canvas -->
     <div class="content-area">
+
+      <!-- INTRO CARD — first thing visible on scroll -->
+      <section class="intro-section">
+        <div class="section-inner">
+          <div class="badge">
+            <span class="badge-dot"></span>
+            ALICE Experiment · CERN · Münster
+          </div>
+          <h1>Hi, I'm<br><span class="name">Madhva Fakare</span></h1>
+          <p class="tagline">MSc Physics student building machine learning pipelines for electron-pion separation using the Transition Radiation Detector at CERN.</p>
+          <div class="hero-actions">
+            <a href="/assistant" class="btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+              Physics AI Assistant
+            </a>
+            <a href="https://github.com/madhva8" target="_blank" class="btn-secondary">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+              GitHub
+            </a>
+          </div>
+        </div>
+      </section>
 
       <section class="section">
         <div class="section-inner">
@@ -652,184 +634,133 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
   main { position: relative; z-index: 10; }
 
-  /* ── HERO: full viewport height, content over canvas ── */
+  /* ── HERO: pure full-viewport animation window, NO text ── */
   .hero {
     position: relative;
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 80px 1.5rem 3rem;
-    text-align: center;
+    height: 100svh;
     pointer-events: none;
-    gap: 1.5rem;
+    overflow: hidden;
   }
 
-  .hero-content {
-    pointer-events: auto;
-    max-width: 660px;
-    width: 100%;
+  /* Corner HUD labels — minimal, unobtrusive */
+  .hud-corner {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    pointer-events: none;
+  }
+  .hud-tl { top: 72px; left: 16px; }
+  .hud-tr { top: 72px; right: 16px; text-align: right; }
+  .hud-bl { bottom: 20px; left: 16px; }
+  .hud-br { bottom: 20px; right: 16px; text-align: right; }
+  .hud-mono {
+    font-size: 0.65rem;
+    color: rgba(0,212,255,0.4);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  @keyframes hintPulse {
+    0%,100% { opacity: 0.3; }
+    50% { opacity: 0.7; }
+  }
+  .hint-pulse { animation: hintPulse 2.5s ease-in-out infinite; }
+  .hint-click { animation: hintPulse 2s ease-in-out infinite 0.5s; }
+
+  /* ── CONTENT AREA: slides up over the fixed canvas (parallax) ── */
+  .content-area {
+    position: relative;
+    z-index: 10;
+    background: #f4f6fa;
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -8px 60px rgba(0,0,0,0.55), 0 -1px 0 rgba(255,255,255,0.06);
+    overflow: hidden;
+    margin-top: -2px; /* tiny overlap so no gap */
+  }
+
+  /* ── INTRO SECTION — first card in scroll area ── */
+  .intro-section {
+    padding: 4rem 1.5rem 3rem;
+    border-bottom: 1px solid #e8e8e8;
+    background: linear-gradient(160deg, #fff 0%, #f4f6fa 100%);
+  }
+  .intro-section .section-inner {
+    max-width: 700px;
+    margin: 0 auto;
   }
 
   .badge {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: rgba(0,212,255,0.1);
-    border: 1px solid rgba(0,212,255,0.25);
-    color: var(--accent);
-    font-size: 0.75rem;
+    background: #e8f4ff;
+    border: 1px solid rgba(0,112,243,0.2);
+    color: #0070f3;
+    font-size: 0.73rem;
     font-weight: 600;
     padding: 6px 14px;
     border-radius: 20px;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.4rem;
     letter-spacing: 0.03em;
     text-transform: uppercase;
   }
   .badge-dot {
     width: 7px; height: 7px;
-    background: var(--accent);
+    background: #0070f3;
     border-radius: 50%;
-    box-shadow: 0 0 8px var(--accent);
+    box-shadow: 0 0 6px #0070f3;
     animation: pulse-dot 2s infinite;
   }
   @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.8); }
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:0.5; transform:scale(0.8); }
   }
 
   h1 {
-    font-size: clamp(2.4rem, 6vw, 4.5rem);
+    font-size: clamp(2.4rem, 5.5vw, 3.8rem);
     font-weight: 900;
     line-height: 1.1;
     margin: 0 0 1rem;
     letter-spacing: -0.03em;
-    color: #fff;
-    text-shadow: 0 2px 40px rgba(0,0,0,0.5);
+    color: #0a0a0a;
   }
   .name {
-    background: linear-gradient(135deg, var(--accent), #818cf8, #c084fc);
+    background: linear-gradient(135deg, #0070f3, #7928ca);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .tagline {
-    font-size: clamp(0.95rem, 2vw, 1.15rem);
-    color: rgba(255,255,255,0.65);
-    line-height: 1.65;
+    font-size: clamp(0.95rem, 1.8vw, 1.1rem);
+    color: #555;
+    line-height: 1.7;
     margin: 0 0 2rem;
-    font-weight: 400;
+    max-width: 560px;
   }
-  .br-desktop { display: none; }
-  @media (min-width: 600px) { .br-desktop { display: block; } }
 
   .hero-actions {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 2rem;
   }
   .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color: white;
-    padding: 13px 26px;
-    border-radius: 12px;
-    text-decoration: none;
-    font-size: 0.95rem;
-    font-weight: 600;
-    transition: all 0.2s;
-    box-shadow: 0 4px 24px rgba(0,212,255,0.3);
+    display: inline-flex; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, #0070f3, #7928ca);
+    color: white; padding: 13px 26px; border-radius: 12px;
+    text-decoration: none; font-size: 0.95rem; font-weight: 600;
+    transition: all 0.2s; box-shadow: 0 4px 20px rgba(0,112,243,0.28);
   }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,212,255,0.45); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,112,243,0.4); }
   .btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255,255,255,0.08);
-    color: rgba(255,255,255,0.85);
-    padding: 13px 26px;
-    border-radius: 12px;
-    text-decoration: none;
-    font-size: 0.95rem;
-    font-weight: 600;
-    border: 1px solid rgba(255,255,255,0.15);
-    transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: white; color: #333; padding: 13px 26px; border-radius: 12px;
+    text-decoration: none; font-size: 0.95rem; font-weight: 600;
+    border: 1px solid #ddd; transition: all 0.2s;
   }
-  .btn-secondary:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.25); }
-
-  .hero-hint {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-size: 0.72rem;
-    color: rgba(255,255,255,0.3);
-    font-family: 'JetBrains Mono', monospace;
-  }
-
-  /* HUD - inline in flow, not absolute */
-  .detector-hud {
-    display: flex;
-    gap: 0;
-    background: rgba(4,6,14,0.55);
-    border: 1px solid rgba(0,212,255,0.2);
-    border-radius: 12px;
-    overflow: hidden;
-    backdrop-filter: blur(12px);
-    pointer-events: none;
-    flex-wrap: nowrap;
-  }
-  .hud-item {
-    padding: 10px 16px;
-    border-right: 1px solid rgba(0,212,255,0.1);
-    text-align: center;
-    min-width: 70px;
-  }
-  .hud-item:last-child { border-right: none; }
-  .hud-label { display: block; font-size: 0.58rem; color: rgba(0,212,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; font-family: 'JetBrains Mono', monospace; margin-bottom: 3px; white-space: nowrap; }
-  .hud-value { display: block; font-size: 0.78rem; font-weight: 600; color: rgba(0,212,255,0.9); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
-
-  /* Scroll indicator - inline in flow */
-  .scroll-indicator {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    color: rgba(255,255,255,0.25);
-    font-size: 0.62rem;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    pointer-events: none;
-  }
-  .scroll-arrow {
-    width: 1px; height: 28px;
-    background: linear-gradient(to bottom, rgba(255,255,255,0.3), transparent);
-    animation: scrollPulse 1.8s ease-in-out infinite;
-  }
-  @keyframes scrollPulse {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 0.8; }
-  }
-
-  /* ── CONTENT AREA: white sections below hero ── */
-  .content-area {
-    position: relative;
-    z-index: 10;
-    background: #f8f9fb;
-    border-radius: 24px 24px 0 0;
-    box-shadow: 0 -4px 60px rgba(0,0,0,0.4);
-    overflow: hidden;
-  }
+  .btn-secondary:hover { background: #f5f5f5; border-color: #ccc; }
 
   .section {
     padding: 3.5rem 1.5rem;
-    border-bottom: 1px solid #ebebeb;
+    border-bottom: 1px solid #e8e8e8;
   }
   .section:last-child { border-bottom: none; }
   .section.alt { background: #fff; }
@@ -958,17 +889,16 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
   /* Mobile tweaks */
   @media (max-width: 500px) {
-    .hero { padding: 70px 1rem 2rem; gap: 1rem; }
+    .intro-section { padding: 2.5rem 1rem 2rem; }
     h1 { font-size: 2.2rem; }
-    .tagline { font-size: 0.9rem; }
+    .tagline { font-size: 0.92rem; }
     .btn-primary, .btn-secondary { padding: 11px 18px; font-size: 0.88rem; }
-    .hud-item { padding: 8px 10px; min-width: 56px; }
-    .hud-label { font-size: 0.52rem; }
-    .hud-value { font-size: 0.7rem; }
     .section { padding: 2.5rem 1rem; }
     .stat-cards { grid-template-columns: repeat(4,1fr); gap: 6px; }
     .stat-num { font-size: 1.1rem; }
     .about-grid { grid-template-columns: 1fr; }
     .link-grid { grid-template-columns: 1fr; }
+    .hud-tl, .hud-tr { top: 64px; }
+    .hud-mono { font-size: 0.58rem; }
   }
 </style>
