@@ -8,36 +8,55 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 <html lang="en">
 <head>
   <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
   <Header />
   <main>
-    <div class="hero">
-      <h1>👋 Hi, I'm Madhva</h1>
-      <p class="tagline">
-        MSc Physics Student · ALICE Experiment at CERN · Münster, Germany
-      </p>
-    </div>
 
-    <section>
-      <h2>About Me</h2>
-      <p>
-        I'm a Master's student in Physics working on my thesis focused on 
-        <strong>electron-pion separation</strong> using the Transition Radiation 
-        Detector (TRD) in the ALICE experiment at CERN. I work with real Run 3 
-        data using machine learning techniques including Boosted Decision Trees 
-        for particle identification.
-      </p>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="badge">MSc Physics · ALICE/CERN · Münster</div>
+        <h1>Hi, I'm<br/><span class="name-gradient">Madhva Fakare</span></h1>
+        <p class="tagline">
+          Particle physicist building ML pipelines for electron-pion separation using the Transition Radiation Detector at CERN.
+        </p>
+        <div class="hero-actions">
+          <a href="/assistant" class="btn-primary">Try Physics AI →</a>
+          <a href="https://github.com/madhva8" target="_blank" class="btn-secondary">GitHub</a>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="orbit-ring ring1"></div>
+        <div class="orbit-ring ring2"></div>
+        <div class="orbit-ring ring3"></div>
+        <div class="nucleus">⚛</div>
+        <div class="particle p1"></div>
+        <div class="particle p2"></div>
+        <div class="particle p3"></div>
+      </div>
     </section>
 
-    <section>
-      <h2>🔬 Current Research</h2>
-      <div class="card">
-        <h3>TRD Electron-Pion Separation — ALICE/CERN</h3>
-        <p>
-          Developing an analysis pipeline for particle identification using 
-          the ALICE Transition Radiation Detector. Working with O2Physics, 
-          ROOT framework, and real Run 3 experimental data on CERN lxplus servers.
+    <!-- RESEARCH -->
+    <section class="section">
+      <div class="section-label">Current Research</div>
+      <h2>TRD Electron-Pion Separation</h2>
+      <div class="research-card">
+        <div class="research-header">
+          <div class="research-icon">🔬</div>
+          <div>
+            <div class="research-title">ALICE Experiment · CERN</div>
+            <div class="research-sub">Run 3 Data Analysis · lxplus servers</div>
+          </div>
+          <a href="https://github.com/madhva8/alice-trd-analysis" target="_blank" class="research-link">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            View repo
+          </a>
+        </div>
+        <p class="research-desc">
+          Developing an analysis pipeline for particle identification using the ALICE Transition Radiation Detector. Working with O2Physics, ROOT framework, and real Run 3 experimental data.
         </p>
         <div class="tags">
           <span>ROOT</span>
@@ -47,122 +66,386 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
           <span>CERN lxplus</span>
           <span>Run 3 Data</span>
         </div>
-        <a href="https://github.com/madhva8/alice-trd-analysis" 
-           target="_blank" class="btn">
-          View on GitHub →
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="section">
+      <div class="section-label">About Me</div>
+      <h2>Background</h2>
+      <p class="about-text">
+        I'm a Master's student in Physics working on my thesis focused on <strong>electron-pion separation</strong> using the Transition Radiation Detector (TRD) in the ALICE experiment at CERN. I work with real Run 3 data using machine learning techniques including Boosted Decision Trees for particle identification.
+      </p>
+    </section>
+
+    <!-- LINKS -->
+    <section class="section">
+      <div class="section-label">Connect</div>
+      <h2>Find Me</h2>
+      <div class="link-grid">
+        <a href="https://github.com/madhva8" target="_blank" class="link-card">
+          <span class="link-icon">
+            <svg viewBox="0 0 16 16" width="22" height="22" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          </span>
+          <span class="link-label">GitHub</span>
+          <span class="link-arrow">→</span>
+        </a>
+        <a href="mailto:madhva.fakare@cern.ch" class="link-card">
+          <span class="link-icon">✉</span>
+          <span class="link-label">CERN Email</span>
+          <span class="link-arrow">→</span>
+        </a>
+        <a href="/blog" class="link-card">
+          <span class="link-icon">📝</span>
+          <span class="link-label">Research Blog</span>
+          <span class="link-arrow">→</span>
+        </a>
+        <a href="/assistant" class="link-card highlight">
+          <span class="link-icon">🔬</span>
+          <span class="link-label">Physics AI Assistant</span>
+          <span class="link-arrow">→</span>
         </a>
       </div>
     </section>
 
-    <section>
-      <h2>🔗 Find Me</h2>
-      <div class="link-row">
-        <a href="https://github.com/madhva8" target="_blank">GitHub</a>
-        <a href="mailto:madhva.fakare@cern.ch">madhva.fakare@cern.ch</a>
-        <a href="/blog">Research Blog</a>
-        <a href="/assistant">AI Assistant</a>
-      </div>
-    </section>
   </main>
   <Footer />
 </body>
 </html>
 
 <style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #fafafa;
+    color: #111;
+    margin: 0;
+    overflow-x: hidden;
+  }
+
   main {
-    max-width: 750px;
+    max-width: 860px;
     margin: 0 auto;
-    padding: 2rem 1rem;
+    padding: 0 1.25rem 4rem;
   }
 
+  /* ── HERO ── */
   .hero {
-    text-align: center;
-    padding: 3rem 0 2rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 2rem;
+    padding: 3.5rem 0 3rem;
+    min-height: 420px;
   }
 
-  .hero h1 {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #e8f0fe;
+    color: #0070f3;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    margin-bottom: 1.25rem;
+    width: fit-content;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.15;
+    margin: 0 0 1rem;
+    letter-spacing: -0.02em;
+    color: #0a0a0a;
+  }
+
+  .name-gradient {
+    background: linear-gradient(135deg, #0070f3, #7928ca);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .tagline {
-    color: #666;
-    font-size: 1.1rem;
+    font-size: 1rem;
+    color: #555;
+    line-height: 1.65;
+    max-width: 440px;
+    margin: 0 0 2rem;
   }
 
-  section {
-    margin: 2.5rem 0;
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    display: inline-block;
+    background: linear-gradient(135deg, #0070f3, #7928ca);
+    color: white;
+    padding: 11px 22px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 0.92rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(0,112,243,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,112,243,0.4); }
+
+  .btn-secondary {
+    display: inline-block;
+    background: white;
+    color: #333;
+    padding: 11px 22px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 0.92rem;
+    font-weight: 600;
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { background: #f5f5f5; border-color: #ccc; }
+
+  /* ── ATOM VISUAL ── */
+  .hero-visual {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    flex-shrink: 0;
+  }
+
+  .nucleus {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.2rem;
+    z-index: 2;
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -52%) scale(1.05); }
+  }
+
+  .orbit-ring {
+    position: absolute;
+    border: 1.5px solid rgba(0,112,243,0.25);
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .ring1 { width: 80px; height: 80px; animation: spin 6s linear infinite; }
+  .ring2 { width: 130px; height: 130px; border-style: dashed; animation: spin 10s linear infinite reverse; }
+  .ring3 { width: 185px; height: 185px; animation: spin 16s linear infinite; opacity: 0.5; }
+
+  @keyframes spin { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+  .particle {
+    position: absolute;
+    width: 8px; height: 8px;
+    background: #0070f3;
+    border-radius: 50%;
+    top: 50%; left: 50%;
+  }
+  .p1 { animation: orbit1 6s linear infinite; box-shadow: 0 0 8px #0070f3; }
+  .p2 { animation: orbit2 10s linear infinite; background: #7928ca; box-shadow: 0 0 8px #7928ca; width: 6px; height: 6px; }
+  .p3 { animation: orbit3 16s linear infinite; background: #00d4ff; box-shadow: 0 0 8px #00d4ff; width: 5px; height: 5px; }
+
+  @keyframes orbit1 {
+    from { transform: translate(-50%, -50%) rotate(0deg) translateX(40px); }
+    to { transform: translate(-50%, -50%) rotate(360deg) translateX(40px); }
+  }
+  @keyframes orbit2 {
+    from { transform: translate(-50%, -50%) rotate(120deg) translateX(65px); }
+    to { transform: translate(-50%, -50%) rotate(480deg) translateX(65px); }
+  }
+  @keyframes orbit3 {
+    from { transform: translate(-50%, -50%) rotate(240deg) translateX(92px); }
+    to { transform: translate(-50%, -50%) rotate(600deg) translateX(92px); }
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    margin: 3rem 0;
+    padding-top: 2rem;
+    border-top: 1px solid #ebebeb;
+  }
+
+  .section-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #0070f3;
+    margin-bottom: 8px;
   }
 
   h2 {
-    font-size: 1.4rem;
-    margin-bottom: 1rem;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0a0a0a;
+    margin: 0 0 1.5rem;
+    letter-spacing: -0.01em;
   }
 
-  p {
-    color: #444;
-    line-height: 1.7;
-  }
-
-  .card {
-    background: #f9f9f9;
-    border-radius: 12px;
+  /* ── RESEARCH CARD ── */
+  .research-card {
+    background: white;
+    border: 1px solid #e8e8e8;
+    border-radius: 16px;
     padding: 1.5rem;
-    border: 1px solid #eee;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    transition: box-shadow 0.2s;
   }
+  .research-card:hover { box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
 
-  .card h3 {
-    margin-bottom: 0.75rem;
-    font-size: 1.1rem;
-  }
-
-  .card p {
+  .research-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
     margin-bottom: 1rem;
+  }
+
+  .research-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .research-title { font-size: 0.95rem; font-weight: 700; color: #111; }
+  .research-sub { font-size: 0.78rem; color: #888; margin-top: 2px; }
+
+  .research-link {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #f5f5f5;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.8rem;
+    color: #333;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .research-link:hover { background: #e8e8e8; color: #000; }
+
+  .research-desc {
+    font-size: 0.92rem;
+    color: #555;
+    line-height: 1.7;
+    margin: 0 0 1.25rem;
   }
 
   .tags {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 1rem;
   }
 
   .tags span {
-    background: #0070f3;
-    color: white;
+    background: #f0f4ff;
+    color: #0050cc;
     padding: 4px 12px;
     border-radius: 20px;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
+    font-weight: 500;
   }
 
-  .btn {
-    display: inline-block;
-    background: #0070f3;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 0.9rem;
+  /* ── ABOUT ── */
+  .about-text {
+    font-size: 1rem;
+    color: #444;
+    line-height: 1.75;
+    max-width: 640px;
   }
+  .about-text strong { color: #111; }
 
-  .btn:hover { background: #005bb5; }
-
-  .link-row {
-    display: flex;
-    flex-wrap: wrap;
+  /* ── LINK GRID ── */
+  .link-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
 
-  .link-row a {
-    background: #f0f0f0;
-    padding: 8px 16px;
-    border-radius: 8px;
+  .link-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    background: white;
+    border: 1px solid #e8e8e8;
+    border-radius: 14px;
     text-decoration: none;
     color: #333;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.15s;
   }
+  .link-card:hover { border-color: #0070f3; color: #0070f3; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,112,243,0.1); }
+  .link-card.highlight { background: linear-gradient(135deg, #f0f4ff, #f5f0ff); border-color: #c8d8ff; }
+  .link-card.highlight:hover { border-color: #7928ca; color: #7928ca; }
 
-  .link-row a:hover { background: #ddd; }
+  .link-icon { font-size: 1.2rem; flex-shrink: 0; }
+  .link-label { flex: 1; }
+  .link-arrow { color: #bbb; font-size: 1rem; }
+  .link-card:hover .link-arrow { color: currentColor; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 640px) {
+    main { padding: 0 1rem 3rem; }
+
+    .hero {
+      grid-template-columns: 1fr;
+      padding: 2rem 0 2rem;
+      min-height: unset;
+      gap: 1.5rem;
+    }
+
+    .hero-visual {
+      width: 150px;
+      height: 150px;
+      margin: 0 auto;
+    }
+    .ring1 { width: 60px; height: 60px; }
+    .ring2 { width: 100px; height: 100px; }
+    .ring3 { width: 140px; height: 140px; }
+    .nucleus { font-size: 1.6rem; }
+
+    @keyframes orbit1 {
+      from { transform: translate(-50%, -50%) rotate(0deg) translateX(30px); }
+      to { transform: translate(-50%, -50%) rotate(360deg) translateX(30px); }
+    }
+    @keyframes orbit2 {
+      from { transform: translate(-50%, -50%) rotate(120deg) translateX(50px); }
+      to { transform: translate(-50%, -50%) rotate(480deg) translateX(50px); }
+    }
+    @keyframes orbit3 {
+      from { transform: translate(-50%, -50%) rotate(240deg) translateX(70px); }
+      to { transform: translate(-50%, -50%) rotate(600deg) translateX(70px); }
+    }
+
+    h1 { font-size: 2.2rem; }
+    .tagline { font-size: 0.95rem; }
+    .hero-actions { gap: 10px; }
+    .btn-primary, .btn-secondary { padding: 10px 18px; font-size: 0.88rem; }
+
+    .research-header { flex-wrap: wrap; }
+    .research-link { margin-left: 0; }
+
+    .link-grid { grid-template-columns: 1fr; }
+
+    .section { margin: 2rem 0; }
+    h2 { font-size: 1.3rem; }
+  }
 </style>
