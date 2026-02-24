@@ -1,63 +1,192 @@
 ---
-import AboutHeroImage from '../assets/blog-placeholder-about.jpg';
 import Layout from '../layouts/BlogPost.astro';
 ---
 
 <Layout
-	title="About Me"
-	description="Lorem ipsum dolor sit amet"
-	pubDate={new Date('August 08 2021')}
-	heroImage={AboutHeroImage}
+    title="About Me"
+    description="MSc Physics student at the University of Münster, working on electron-pion separation using the TRD in the ALICE experiment at CERN."
+    pubDate={new Date('February 24 2026')}
+    heroImage="/about-hero.jpg"
 >
-	<p>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Vitae ultricies leo integer malesuada nunc vel risus commodo
-		viverra. Adipiscing enim eu turpis egestas pretium. Euismod elementum nisi quis eleifend quam
-		adipiscing. In hac habitasse platea dictumst vestibulum. Sagittis purus sit amet volutpat. Netus
-		et malesuada fames ac turpis egestas. Eget magna fermentum iaculis eu non diam phasellus
-		vestibulum lorem. Varius sit amet mattis vulputate enim. Habitasse platea dictumst quisque
-		sagittis. Integer quis auctor elit sed vulputate mi. Dictumst quisque sagittis purus sit amet.
-	</p>
 
-	<p>
-		Morbi tristique senectus et netus. Id semper risus in hendrerit gravida rutrum quisque non
-		tellus. Habitasse platea dictumst quisque sagittis purus sit amet. Tellus molestie nunc non
-		blandit massa. Cursus vitae congue mauris rhoncus. Accumsan tortor posuere ac ut. Fringilla urna
-		porttitor rhoncus dolor. Elit ullamcorper dignissim cras tincidunt lobortis. In cursus turpis
-		massa tincidunt dui ut ornare lectus. Integer feugiat scelerisque varius morbi enim nunc.
-		Bibendum neque egestas congue quisque egestas diam. Cras ornare arcu dui vivamus arcu felis
-		bibendum. Dignissim suspendisse in est ante in nibh mauris. Sed tempus urna et pharetra pharetra
-		massa massa ultricies mi.
-	</p>
+<style>
+    .about-content h2 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin: 2rem 0 0.75rem;
+        color: #111;
+    }
+    .about-content p {
+        color: #444;
+        line-height: 1.78;
+        margin-bottom: 1rem;
+    }
+    .about-content ul {
+        margin: 0.5rem 0 1rem 1.2rem;
+        color: #444;
+        line-height: 1.8;
+    }
+    .about-content a {
+        color: #0070f3;
+        text-decoration: none;
+    }
+    .about-content a:hover {
+        text-decoration: underline;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin: 1.5rem 0;
+    }
+    @media (max-width: 540px) {
+        .info-grid { grid-template-columns: 1fr; }
+    }
+    .info-card {
+        background: #f7f8fa;
+        border: 1px solid #e8e8e8;
+        border-radius: 12px;
+        padding: 14px 16px;
+    }
+    .info-card-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #0070f3;
+        margin-bottom: 4px;
+    }
+    .info-card-value {
+        font-size: 0.9rem;
+        color: #111;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+    .info-card-sub {
+        font-size: 0.78rem;
+        color: #888;
+        margin-top: 2px;
+    }
+    .contact-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 0.75rem;
+    }
+    .contact-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #0070f3;
+        color: white !important;
+        padding: 9px 18px;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        text-decoration: none !important;
+        transition: background 0.2s;
+    }
+    .contact-btn:hover { background: #005bb5 !important; }
+    .contact-btn.secondary {
+        background: white;
+        color: #333 !important;
+        border: 1px solid #ddd;
+    }
+    .contact-btn.secondary:hover { background: #f5f5f5 !important; }
+</style>
 
-	<p>
-		Mollis nunc sed id semper risus in. Convallis a cras semper auctor neque. Diam sit amet nisl
-		suscipit. Lacus viverra vitae congue eu consequat ac felis donec. Egestas integer eget aliquet
-		nibh praesent tristique magna sit amet. Eget magna fermentum iaculis eu non diam. In vitae
-		turpis massa sed elementum. Tristique et egestas quis ipsum suspendisse ultrices. Eget lorem
-		dolor sed viverra ipsum. Vel turpis nunc eget lorem dolor sed viverra. Posuere ac ut consequat
-		semper viverra nam. Laoreet suspendisse interdum consectetur libero id faucibus. Diam phasellus
-		vestibulum lorem sed risus ultricies tristique. Rhoncus dolor purus non enim praesent elementum
-		facilisis. Ultrices tincidunt arcu non sodales neque. Tempus egestas sed sed risus pretium quam
-		vulputate. Viverra suspendisse potenti nullam ac tortor vitae purus faucibus ornare. Fringilla
-		urna porttitor rhoncus dolor purus non. Amet dictum sit amet justo donec enim.
-	</p>
+<div class="about-content">
 
-	<p>
-		Mattis ullamcorper velit sed ullamcorper morbi tincidunt. Tortor posuere ac ut consequat semper
-		viverra. Tellus mauris a diam maecenas sed enim ut sem viverra. Venenatis urna cursus eget nunc
-		scelerisque viverra mauris in. Arcu ac tortor dignissim convallis aenean et tortor at. Curabitur
-		gravida arcu ac tortor dignissim convallis aenean et tortor. Egestas tellus rutrum tellus
-		pellentesque eu. Fusce ut placerat orci nulla pellentesque dignissim enim sit amet. Ut enim
-		blandit volutpat maecenas volutpat blandit aliquam etiam. Id donec ultrices tincidunt arcu. Id
-		cursus metus aliquam eleifend mi.
-	</p>
+    <p>
+        I'm <strong>Madhva Fakare</strong>, a Master's student in Physics at the 
+        <strong>University of Münster</strong>, Germany. Originally from India, I moved to 
+        Germany to pursue experimental particle physics — and ended up working on one of the 
+        most complex detectors ever built.
+    </p>
 
-	<p>
-		Tempus quam pellentesque nec nam aliquam sem. Risus at ultrices mi tempus imperdiet. Id porta
-		nibh venenatis cras sed felis eget velit. Ipsum a arcu cursus vitae. Facilisis magna etiam
-		tempor orci eu lobortis elementum. Tincidunt dui ut ornare lectus sit. Quisque non tellus orci
-		ac. Blandit libero volutpat sed cras. Nec tincidunt praesent semper feugiat nibh sed pulvinar
-		proin gravida. Egestas integer eget aliquet nibh praesent tristique magna.
-	</p>
+    <div class="info-grid">
+        <div class="info-card">
+            <div class="info-card-label">Education</div>
+            <div class="info-card-value">MSc Physics</div>
+            <div class="info-card-sub">University of Münster, Germany</div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-label">Experiment</div>
+            <div class="info-card-value">ALICE · LHC · CERN</div>
+            <div class="info-card-sub">Run 3 · Pb+Pb at √s = 5.5 TeV</div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-label">Thesis Focus</div>
+            <div class="info-card-value">Electron-Pion Separation</div>
+            <div class="info-card-sub">TRD · Boosted Decision Trees</div>
+        </div>
+        <div class="info-card">
+            <div class="info-card-label">Tools</div>
+            <div class="info-card-value">O2Physics · ROOT · C++</div>
+            <div class="info-card-sub">Python · Git · lxplus / CVMFS</div>
+        </div>
+    </div>
+
+    <h2>What I Work On</h2>
+    <p>
+        My thesis focuses on <strong>electron-pion separation</strong> using the Transition 
+        Radiation Detector (TRD) inside ALICE. ALICE is designed to study the 
+        quark-gluon plasma — a state of matter that existed microseconds after the Big Bang — 
+        by smashing lead nuclei together at nearly the speed of light.
+    </p>
+    <p>
+        The TRD distinguishes particle types based on the transition radiation they emit 
+        passing through alternating materials. My job is to build a machine learning pipeline 
+        that uses these signals to separate electrons from pions as accurately as possible, 
+        which matters for downstream physics measurements.
+    </p>
+
+    <h2>Day-to-Day</h2>
+    <ul>
+        <li>Writing analysis code in <strong>C++</strong> within the O2Physics framework on CERN's lxplus servers</li>
+        <li>Building ROOT macros to explore TRD detector signals across time bins (Q0, Q1, Q2)</li>
+        <li>Training <strong>Boosted Decision Trees</strong> on real Run 3 collision data for particle ID</li>
+        <li>Navigating the AO2D file format and linking track parameters to Monte Carlo truth labels</li>
+        <li>Using CVMFS to access pre-compiled O2Physics without 24-hour local builds</li>
+    </ul>
+    <p>
+        The full analysis lives on GitHub: 
+        <a href="https://github.com/madhva8/alice-trd-analysis" target="_blank">alice-trd-analysis</a>
+    </p>
+
+    <h2>Background</h2>
+    <p>
+        I completed my undergraduate Physics studies in India before coming to Münster. 
+        The jump from coursework to real experimental data has been steep — ROOT, a 
+        million-line codebase like O2Physics, actual LHC collision data. But the problems 
+        are real and the data is real, and that makes all the difference.
+    </p>
+    <p>
+        The detector signals I work with came from actual lead-lead collisions at 5.5 TeV — 
+        conditions that briefly recreate the state of the universe a few microseconds after 
+        the Big Bang. That's hard to get tired of.
+    </p>
+
+    <h2>Beyond Physics</h2>
+    <p>
+        I'm interested in how AI tools can speed up scientific workflows. There's a 
+        <a href="/assistant">Physics AI Assistant</a> built into this site, pre-loaded with 
+        my project context for quick questions while I work. I also write occasional 
+        <a href="/blog">blog posts</a> about things I figured out the hard way in ROOT or 
+        O2Physics — mostly so I don't forget, but hopefully useful to others too.
+    </p>
+
+    <h2>Get in Touch</h2>
+    <p>Working on ALICE, particle ID, or ROOT/O2Physics? Happy to talk.</p>
+    <div class="contact-row">
+        <a href="mailto:madhva.fakare@cern.ch" class="contact-btn">
+            ✉ madhva.fakare@cern.ch
+        </a>
+        <a href="https://github.com/madhva8" target="_blank" class="contact-btn secondary">
+            ⌥ GitHub
+        </a>
+    </div>
+
+</div>
+
 </Layout>
