@@ -2,6 +2,7 @@
 title: "How ALICE Processes 3.5 TB/s of Collision Data in Real Time"
 description: "Notes on David Rohr's talk at Kruger 2022 on the O2 computing framework, GPU-accelerated reconstruction, and the engineering behind Run 3 data processing."
 pubDate: "Feb 24 2026"
+heroImage: "/ALICE.png"
 ---
 
 **Reference:** David Rohr (on behalf of the ALICE Collaboration), *ALICE Data Processing in LHC Run 3*, Kruger 2022: Discovery Physics at the LHC, 7 December 2022. [Slides](https://indico.tlabs.ac.za/event/113/contributions/2395/)
