@@ -6,7 +6,6 @@ import Layout from '../layouts/BlogPost.astro';
     title="About Me"
     description="MSc Physics student at the University of Münster, working on electron-pion separation using the TRD in the ALICE experiment at CERN."
     pubDate={new Date('February 24 2026')}
-    heroImage="/IMG_5585.JPG"
 >
 
 <style>
@@ -26,53 +25,71 @@ import Layout from '../layouts/BlogPost.astro';
         color: #444;
         line-height: 1.8;
     }
-    .about-content a {
+    .about-content a { color: #0070f3; text-decoration: none; }
+    .about-content a:hover { text-decoration: underline; }
+
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 1.8rem;
+        margin-bottom: 2rem;
+    }
+    .profile-photo {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        object-position: center top;
+        flex-shrink: 0;
+        border: 3px solid #e8e8e8;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+    }
+    .profile-intro h1 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #0a0a0a;
+        margin: 0 0 4px;
+        letter-spacing: -0.02em;
+    }
+    .profile-intro .role {
+        font-size: 0.88rem;
         color: #0070f3;
-        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 6px;
     }
-    .about-content a:hover {
-        text-decoration: underline;
+    .profile-intro .location { font-size: 0.83rem; color: #888; }
+
+    @media (max-width: 480px) {
+        .profile-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+        .profile-photo { width: 90px; height: 90px; }
     }
+
     .info-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        gap: 10px;
         margin: 1.5rem 0;
     }
-    @media (max-width: 540px) {
-        .info-grid { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 540px) { .info-grid { grid-template-columns: 1fr; } }
+
     .info-card {
         background: #f7f8fa;
         border: 1px solid #e8e8e8;
         border-radius: 12px;
-        padding: 14px 16px;
+        padding: 12px 14px;
     }
     .info-card-label {
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
         color: #0070f3;
         margin-bottom: 4px;
     }
-    .info-card-value {
-        font-size: 0.9rem;
-        color: #111;
-        font-weight: 500;
-        line-height: 1.5;
-    }
-    .info-card-sub {
-        font-size: 0.78rem;
-        color: #888;
-        margin-top: 2px;
-    }
-    .contact-row {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-        margin-top: 0.75rem;
-    }
+    .info-card-value { font-size: 0.88rem; color: #111; font-weight: 600; line-height: 1.4; }
+    .info-card-sub { font-size: 0.76rem; color: #888; margin-top: 2px; }
+
+    .contact-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 0.75rem; }
     .contact-btn {
         display: inline-flex;
         align-items: center;
@@ -86,7 +103,7 @@ import Layout from '../layouts/BlogPost.astro';
         text-decoration: none !important;
         transition: background 0.2s;
     }
-    .contact-btn:hover { background: #005bb5 !important; }
+    .contact-btn:hover { background: #005bb5 !important; text-decoration: none !important; }
     .contact-btn.secondary {
         background: white;
         color: #333 !important;
@@ -97,11 +114,20 @@ import Layout from '../layouts/BlogPost.astro';
 
 <div class="about-content">
 
+    <div class="profile-header">
+        <img src="/IMG_5585.JPG" alt="Madhva Fakare" class="profile-photo" />
+        <div class="profile-intro">
+            <h1>Madhva Fakare</h1>
+            <div class="role">MSc Physics · ALICE Experiment at CERN</div>
+            <div class="location">📍 Münster, Germany · Originally from India</div>
+        </div>
+    </div>
+
     <p>
-        I'm <strong>Madhva Fakare</strong>, a Master's student in Physics at the 
-        <strong>University of Münster</strong>, Germany. Originally from India, I moved to 
-        Germany to pursue experimental particle physics — and ended up working on one of the 
-        most complex detectors ever built.
+        I'm a Master's student in Physics at the <strong>University of Münster</strong>.
+        My thesis sits at the intersection of experimental particle physics and machine
+        learning — building a pipeline to separate electrons from pions using the
+        Transition Radiation Detector inside ALICE at CERN.
     </p>
 
     <div class="info-grid">
@@ -129,62 +155,52 @@ import Layout from '../layouts/BlogPost.astro';
 
     <h2>What I Work On</h2>
     <p>
-        My thesis focuses on <strong>electron-pion separation</strong> using the Transition 
-        Radiation Detector (TRD) inside ALICE. ALICE is designed to study the 
-        quark-gluon plasma — a state of matter that existed microseconds after the Big Bang — 
-        by smashing lead nuclei together at nearly the speed of light.
+        My thesis focuses on <strong>electron-pion separation</strong> using the Transition
+        Radiation Detector (TRD) inside ALICE. ALICE is designed to study the quark-gluon
+        plasma — a state of matter that existed microseconds after the Big Bang — by
+        colliding lead nuclei at nearly the speed of light.
     </p>
     <p>
-        The TRD distinguishes particle types based on the transition radiation they emit 
-        passing through alternating materials. My job is to build a machine learning pipeline 
-        that uses these signals to separate electrons from pions as accurately as possible, 
-        which matters for downstream physics measurements.
+        The TRD distinguishes particle types based on transition radiation emitted passing
+        through alternating materials. My job is to build a machine learning pipeline that
+        uses these signals to separate electrons from pions as accurately as possible.
     </p>
 
     <h2>Day-to-Day</h2>
     <ul>
-        <li>Writing analysis code in <strong>C++</strong> within the O2Physics framework on CERN's lxplus servers</li>
+        <li>Writing analysis code in <strong>C++</strong> within O2Physics on CERN's lxplus servers</li>
         <li>Building ROOT macros to explore TRD detector signals across time bins (Q0, Q1, Q2)</li>
-        <li>Training <strong>Boosted Decision Trees</strong> on real Run 3 collision data for particle ID</li>
-        <li>Navigating the AO2D file format and linking track parameters to Monte Carlo truth labels</li>
+        <li>Training <strong>Boosted Decision Trees</strong> on real Run 3 data for particle identification</li>
+        <li>Navigating AO2D files and linking track parameters to Monte Carlo truth labels</li>
         <li>Using CVMFS to access pre-compiled O2Physics without 24-hour local builds</li>
     </ul>
     <p>
-        The full analysis lives on GitHub: 
+        Full analysis on GitHub:
         <a href="https://github.com/madhva8/alice-trd-analysis" target="_blank">alice-trd-analysis</a>
     </p>
 
     <h2>Background</h2>
     <p>
-        I completed my undergraduate Physics studies in India before coming to Münster. 
-        The jump from coursework to real experimental data has been steep — ROOT, a 
-        million-line codebase like O2Physics, actual LHC collision data. But the problems 
-        are real and the data is real, and that makes all the difference.
-    </p>
-    <p>
-        The detector signals I work with came from actual lead-lead collisions at 5.5 TeV — 
-        conditions that briefly recreate the state of the universe a few microseconds after 
-        the Big Bang. That's hard to get tired of.
+        I completed my undergraduate Physics studies in India before coming to Münster.
+        The jump to real experimental data has been steep — ROOT, a million-line codebase,
+        actual LHC collision data. But the signals I'm analysing came from real lead-lead
+        collisions at 5.5 TeV, briefly recreating the state of the universe a few
+        microseconds after the Big Bang. That's hard to get tired of.
     </p>
 
     <h2>Beyond Physics</h2>
     <p>
-        I'm interested in how AI tools can speed up scientific workflows. There's a 
-        <a href="/assistant">Physics AI Assistant</a> built into this site, pre-loaded with 
-        my project context for quick questions while I work. I also write occasional 
-        <a href="/blog">blog posts</a> about things I figured out the hard way in ROOT or 
-        O2Physics — mostly so I don't forget, but hopefully useful to others too.
+        I'm interested in how AI tools can speed up scientific workflows — there's a
+        <a href="/assistant">Physics AI Assistant</a> built into this site, pre-loaded
+        with my project context. I also write occasional <a href="/blog">blog posts</a>
+        about things I figured out the hard way in ROOT or O2Physics.
     </p>
 
     <h2>Get in Touch</h2>
     <p>Working on ALICE, particle ID, or ROOT/O2Physics? Happy to talk.</p>
     <div class="contact-row">
-        <a href="mailto:madhva.fakare@cern.ch" class="contact-btn">
-            ✉ madhva.fakare@cern.ch
-        </a>
-        <a href="https://github.com/madhva8" target="_blank" class="contact-btn secondary">
-            ⌥ GitHub
-        </a>
+        <a href="mailto:madhva.fakare@cern.ch" class="contact-btn">✉ madhva.fakare@cern.ch</a>
+        <a href="https://github.com/madhva8" target="_blank" class="contact-btn secondary">⌥ GitHub</a>
     </div>
 
 </div>
