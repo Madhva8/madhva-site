@@ -110,15 +110,44 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       <section class="section alt">
         <div class="section-inner">
           <div class="section-label">About Me</div>
-          <h2>Background</h2>
-          <div class="about-grid">
-            <p class="about-text">I'm a Master's student in Physics working on my thesis focused on <strong>electron-pion separation</strong> using the Transition Radiation Detector (TRD) in the ALICE experiment at CERN. I work with real Run 3 data using machine learning techniques including Boosted Decision Trees for particle identification.</p>
-            <div class="about-pills">
-              <div class="pill">📍 Münster, Germany</div>
-              <div class="pill">🎓 MSc Physics</div>
-              <div class="pill">⚛ ALICE/CERN</div>
-              <div class="pill">💻 O2Physics · ROOT</div>
-              <div class="pill">🤖 ML / BDT</div>
+          <h2>Who I Am</h2>
+
+          <div class="about-bio">
+            <div class="about-text-block">
+              <p>I'm a Master's student in Physics at the <strong>University of Münster</strong>, originally from India. My thesis sits at the intersection of experimental particle physics and machine learning — I'm building a pipeline to separate electrons from pions using the Transition Radiation Detector inside the ALICE experiment at CERN.</p>
+              <p>What draws me to this problem is the scale of it: heavy-ion collisions at the LHC recreate conditions from microseconds after the Big Bang, and the TRD is one of the key detectors helping us understand what comes out. Getting the particle identification right matters for the physics.</p>
+              <p>Day-to-day, I work with real Run 3 data on CERN's <strong>lxplus</strong> servers, writing analysis code in the O2Physics framework, building ROOT macros, and training Boosted Decision Trees to distinguish particle signatures from raw detector signals.</p>
+            </div>
+
+            <div class="about-cards">
+              <div class="about-card">
+                <div class="about-card-icon">🎓</div>
+                <div>
+                  <div class="about-card-title">Education</div>
+                  <div class="about-card-body">MSc Physics<br><span class="muted">University of Münster, Germany</span></div>
+                </div>
+              </div>
+              <div class="about-card">
+                <div class="about-card-icon">⚛️</div>
+                <div>
+                  <div class="about-card-title">Experiment</div>
+                  <div class="about-card-body">ALICE · LHC · CERN<br><span class="muted">Run 3 data · Pb+Pb collisions</span></div>
+                </div>
+              </div>
+              <div class="about-card">
+                <div class="about-card-icon">🔬</div>
+                <div>
+                  <div class="about-card-title">Focus</div>
+                  <div class="about-card-body">Electron-pion separation<br><span class="muted">TRD · Boosted Decision Trees</span></div>
+                </div>
+              </div>
+              <div class="about-card">
+                <div class="about-card-icon">💻</div>
+                <div>
+                  <div class="about-card-title">Tools</div>
+                  <div class="about-card-body">O2Physics · ROOT · C++<br><span class="muted">Python · Git · lxplus / CVMFS</span></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -861,13 +890,42 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
   .stat-label { font-size: 0.68rem; color: #999; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.06em; }
 
   /* About */
-  .about-grid { display: grid; grid-template-columns: 1fr auto; gap: 2rem; align-items: start; }
-  @media (max-width: 600px) { .about-grid { grid-template-columns: 1fr; } }
-  .about-text { font-size: 0.97rem; color: #444; line-height: 1.78; margin: 0; }
-  .about-text strong { color: #111; }
-  .about-pills { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
-  @media (max-width: 600px) { .about-pills { flex-direction: row; flex-wrap: wrap; } }
-  .pill { background: white; border: 1px solid #e8e8e8; padding: 7px 14px; border-radius: 20px; font-size: 0.8rem; color: #333; white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+  .about-bio {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 2.5rem;
+    align-items: start;
+  }
+  @media (max-width: 720px) { .about-bio { grid-template-columns: 1fr; } }
+
+  .about-text-block p {
+    font-size: 0.97rem;
+    color: #444;
+    line-height: 1.80;
+    margin: 0 0 1rem;
+  }
+  .about-text-block p:last-child { margin-bottom: 0; }
+  .about-text-block strong { color: #111; }
+
+  .about-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .about-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: white;
+    border: 1px solid #eaeaea;
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+  }
+  .about-card-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+  .about-card-title { font-size: 0.75rem; font-weight: 700; color: #0070f3; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+  .about-card-body { font-size: 0.85rem; color: #222; line-height: 1.5; }
+  .muted { color: #888; font-size: 0.78rem; }
 
   /* Link grid */
   .link-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
