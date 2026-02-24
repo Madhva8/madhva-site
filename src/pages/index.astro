@@ -596,21 +596,38 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // Hits
     drawHits();
 
-    // Tracks — reveal points per frame per track, draw only new segment (not full path)
+    // Tracks — reveal progressively, draw full trail from origin with fade
     const STEP=1.5;
     tracks=tracks.filter(tr=>{
-      const prev=tr.drawTo;
-      tr.drawTo=Math.min(tr.pts.length, tr.drawTo+STEP*2); // *2 because flat array pairs
-      // Draw only the newly revealed segment + a short tail for smoothness
-      const tailStart=Math.max(0, prev-8);
-      if(tr.drawTo>=4){
+      tr.drawTo=Math.min(tr.pts.length, tr.drawTo+STEP*2);
+      const end=tr.drawTo; // index into flat array (pairs)
+      if(end<4) return true;
+
+      // ── Full trail: draw in segments with increasing opacity toward tip ──
+      const SEGS=12; // number of gradient segments along the trail
+      const segLen=Math.max(4, Math.floor(end/SEGS/2)*2);
+      for(let s=0;s<SEGS;s++){
+        const iStart=Math.max(0, end - (SEGS-s)*segLen);
+        const iEnd  =Math.max(0, end - (SEGS-s-1)*segLen);
+        if(iEnd-iStart<2) continue;
+        const alpha=0.08 + (s/SEGS)*0.80; // fades from 0.08 at tail to ~0.88 at tip
         ctx.beginPath();
-        ctx.moveTo(tr.pts[tailStart], tr.pts[tailStart+1]);
-        for(let i=tailStart+2; i<tr.drawTo; i+=2)
+        ctx.moveTo(tr.pts[iStart], tr.pts[iStart+1]);
+        for(let i=iStart+2;i<=iEnd;i+=2)
           ctx.lineTo(tr.pts[i], tr.pts[i+1]);
-        ctx.strokeStyle=tr.color; ctx.lineWidth=tr.width; ctx.globalAlpha=0.85;
-        ctx.stroke(); ctx.globalAlpha=1;
+        ctx.strokeStyle=tr.color;
+        ctx.lineWidth=tr.width*(0.4+0.6*(s/SEGS)); // thinner at tail, full width at tip
+        ctx.globalAlpha=alpha;
+        ctx.stroke();
       }
+      ctx.globalAlpha=1;
+
+      // ── Bright leading dot at the tip ──
+      const tipX=tr.pts[end-2], tipY=tr.pts[end-1];
+      ctx.beginPath(); ctx.arc(tipX,tipY,tr.width*1.6,0,Math.PI*2);
+      ctx.fillStyle=tr.color; ctx.globalAlpha=0.95; ctx.fill();
+      ctx.globalAlpha=1;
+
       return tr.drawTo<tr.pts.length;
     });
 
