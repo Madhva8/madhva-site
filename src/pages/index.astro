@@ -35,6 +35,17 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       <div class="hud-corner hud-bl">
         <span class="hud-mono hint-click">⊕ click to collide</span>
       </div>
+
+      <!-- Particle legend — right side -->
+      <div class="hud-legend">
+        <div class="legend-title">PARTICLES</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#00e5ff"></span><span class="legend-name">Electron</span></div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ff7043"></span><span class="legend-name">Pion</span></div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ce93d8"></span><span class="legend-name">Muon</span></div>
+        <div class="legend-item"><span class="legend-dot" style="background:#66bb6a"></span><span class="legend-name">Kaon</span></div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ffee58"></span><span class="legend-name">Photon</span></div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ef5350"></span><span class="legend-name">Proton</span></div>
+      </div>
     </section>
 
     <!-- PARALLAX CONTENT: slides up over the fixed canvas -->
@@ -732,6 +743,49 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
   .hint-pulse { animation: hintPulse 2.5s ease-in-out infinite; }
   .hint-click { animation: hintPulse 2s ease-in-out infinite 0.5s; }
 
+  /* ── Particle legend ── */
+  .hud-legend {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .legend-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    color: rgba(0,212,255,0.35);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    text-align: right;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+  }
+  .legend-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    opacity: 0.75;
+    order: 2;
+  }
+  .legend-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.60rem;
+    letter-spacing: 0.06em;
+    color: rgba(200,230,255,0.45);
+    text-transform: uppercase;
+    order: 1;
+  }
+
   /* ── CONTENT AREA: slides up over the fixed canvas (parallax) ── */
   .content-area {
     position: relative;
@@ -996,5 +1050,25 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     .link-grid { grid-template-columns: 1fr; }
     .hud-tl, .hud-tr { top: 64px; }
     .hud-mono { font-size: 0.58rem; }
+
+    /* Legend moves to bottom-center on mobile, horizontal layout */
+    .hud-legend {
+      top: auto;
+      bottom: 48px;
+      right: 50%;
+      transform: translateX(50%);
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px 14px;
+      background: rgba(0,0,0,0.35);
+      border-radius: 8px;
+      padding: 6px 10px;
+    }
+    .legend-title { display: none; }
+    .legend-item { justify-content: center; }
+    .legend-name { font-size: 0.52rem; }
+    .legend-dot { width: 6px; height: 6px; order: 1; }
+    .legend-name { order: 2; }
   }
 </style>
