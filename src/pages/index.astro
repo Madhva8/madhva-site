@@ -240,6 +240,8 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     detDirty = true;
     // Safe to reset now — variables are always initialised before this runs
     tracks = []; hits = []; beams = [];
+    // Re-spawn beams with updated cx/cy/W so they don't ghost at old origin
+    setTimeout(spawnBeams, 0);
   }
   resize();
   window.addEventListener('resize', ()=>{ resize(); });
@@ -559,22 +561,30 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
   function triggerCollision() {
     glow=1; beams=[];
-    const n=35+Math.floor(Math.random()*20); // Pb+Pb multiplicity: 35-55 tracks
+    // Pb+Pb at √s=5.02 TeV central collision
+    // Realistic particle species fractions: ~80% pions, 10% kaons, 5% protons, rest e/μ/γ
+    const n = 48 + Math.floor(Math.random()*18); // 48–65 representative tracks
     for(let i=0;i<n;i++){
-      const angle=Math.PI*2*i/n+(Math.random()-0.5)*0.35;
+      const angle = Math.PI*2*i/n + (Math.random()-0.5)*0.30;
       tracks.push(makeTrack(angle));
       spawnHits(angle, rC());
     }
-    setTimeout(spawnBeams, 2400);
+    setTimeout(()=>{ spawnBeams(); }, 2800);
   }
 
   function spawnBeams() {
     beams=[];
-    // Two beams from each side, tightly centered on cy
-    beams.push({x:-30, y:cy-2, vx:9,  trail:[]});
-    beams.push({x:-30, y:cy+2, vx:9,  trail:[]});
-    beams.push({x:W+30,y:cy-2, vx:-9, trail:[]});
-    beams.push({x:W+30,y:cy+2, vx:-9, trail:[]});
+    // Pb beams travel along beam axis (z-axis = horizontal on screen)
+    // Left bunch → right, right bunch → left, both aimed at IP (cx, cy)
+    // Start well outside viewport so they visibly travel in from the edge
+    const bY = cy; // beam axis exactly through interaction point
+    // Each bunch: 1 main beam + 2 faint satellite bunches offset slightly in y
+    beams.push({x: -W*0.1,  y: bY,   vx: 7, trail: [], alpha: 1.0,  r: 2.8}); // main L
+    beams.push({x: -W*0.1,  y: bY-3, vx: 7, trail: [], alpha: 0.35, r: 1.4}); // satellite
+    beams.push({x: -W*0.1,  y: bY+3, vx: 7, trail: [], alpha: 0.35, r: 1.4}); // satellite
+    beams.push({x: W*1.1,   y: bY,   vx:-7, trail: [], alpha: 1.0,  r: 2.8}); // main R
+    beams.push({x: W*1.1,   y: bY-3, vx:-7, trail: [], alpha: 0.35, r: 1.4}); // satellite
+    beams.push({x: W*1.1,   y: bY+3, vx:-7, trail: [], alpha: 0.35, r: 1.4}); // satellite
   }
 
   canvas.addEventListener('click',()=>triggerCollision());
@@ -608,43 +618,55 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       if(glow<0)glow=0;
     }
 
-    // Clip drawing strictly to detector boundary — nothing can appear outside the ring
+    // ── Pb beams drawn BEFORE clip so trails span full canvas width ──
+    beams.forEach(b=>{
+      b.trail.push({x:b.x, y:b.y});
+      if(b.trail.length>28) b.trail.shift();
+      b.x += b.vx;
+    });
+    // Collision check: main beams (alpha=1) meet at IP
+    const mainL = beams.find(b=>b.vx>0 && b.alpha===1.0);
+    const mainR = beams.find(b=>b.vx<0 && b.alpha===1.0);
+    if(mainL && mainR && mainL.x >= mainR.x){
+      triggerCollision(); beams=[];
+    } else {
+      ctx.save(); // save state for beam drawing — no clip active
+      beams.forEach(b=>{
+        if(b.trail.length < 2) return;
+        // Glowing trail: gradient from transparent at tail to bright at head
+        const tailX = b.trail[0].x, tipX = b.x;
+        const grad = ctx.createLinearGradient(tailX, b.y, tipX, b.y);
+        grad.addColorStop(0, 'rgba(255,60,80,0)');
+        grad.addColorStop(0.6, `rgba(255,60,80,${(b.alpha*0.4).toFixed(2)})`);
+        grad.addColorStop(1, `rgba(255,180,120,${b.alpha.toFixed(2)})`);
+        ctx.beginPath();
+        ctx.moveTo(b.trail[0].x, b.trail[0].y);
+        b.trail.forEach(pt => ctx.lineTo(pt.x, pt.y));
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = b.r * 0.8;
+        ctx.globalAlpha = 1;
+        ctx.stroke();
+        // Bright leading dot (only for main beams)
+        if(b.alpha === 1.0){
+          ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(255,120,80,0.95)'; ctx.fill();
+          // Soft glow around dot
+          const grd = ctx.createRadialGradient(b.x,b.y,0, b.x,b.y, b.r*4);
+          grd.addColorStop(0,'rgba(255,80,50,0.5)');
+          grd.addColorStop(1,'rgba(255,80,50,0)');
+          ctx.beginPath(); ctx.arc(b.x,b.y,b.r*4,0,Math.PI*2);
+          ctx.fillStyle=grd; ctx.fill();
+        }
+      });
+      ctx.restore();
+      beams = beams.filter(b => b.x > -W*0.15 && b.x < W*1.15);
+    }
+
+    // Clip drawing strictly to detector boundary — hits/tracks cannot appear outside the ring
     ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, D.emcalOuter * R, 0, Math.PI * 2);
     ctx.clip();
-
-    // Beams — update positions first, then draw only inside-ring segments
-    beams.forEach(b=>{
-      b.trail.push({x:b.x, y:b.y});
-      if(b.trail.length>12) b.trail.shift();
-      b.x += b.vx;
-    });
-    const L=beams.filter(b=>b.vx>0), Ri=beams.filter(b=>b.vx<0);
-    if(L.length&&Ri.length&&L[0].x+12>=Ri[0].x){
-      triggerCollision(); beams=[];
-    } else {
-      beams=beams.filter(b=>{
-        const ringR2 = (D.emcalOuter * R) ** 2;
-        const insidePts = b.trail.filter(pt => {
-          const dx=pt.x-cx, dy=pt.y-cy;
-          return dx*dx+dy*dy < ringR2;
-        });
-        if(insidePts.length > 1){
-          ctx.beginPath();
-          ctx.moveTo(insidePts[0].x, insidePts[0].y);
-          for(let i=1; i<insidePts.length; i++)
-            ctx.lineTo(insidePts[i].x, insidePts[i].y);
-          ctx.strokeStyle='#ff4466'; ctx.lineWidth=1.5; ctx.globalAlpha=0.72; ctx.stroke(); ctx.globalAlpha=1;
-        }
-        const inRing=(b.x-cx)**2+(b.y-cy)**2 < ringR2;
-        if(inRing){
-          ctx.beginPath(); ctx.arc(b.x,b.y,3,0,Math.PI*2);
-          ctx.fillStyle='rgba(255,68,102,0.9)'; ctx.fill();
-        }
-        return b.x>-50&&b.x<W+50;
-      });
-    }
 
     // Hits and tracks all clipped to detector boundary
     drawHits();
