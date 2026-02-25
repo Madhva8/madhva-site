@@ -664,7 +664,6 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
   function startCycle() {
     clearCycleTimer();
-    tracks = []; hits = []; // clear any lingering tracks before beams animate
     tracks=[]; hits=[]; beams=[]; holdAlpha=1.0;
     phase='beams';
     spawnBeams();
@@ -800,7 +799,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
         tr.drawTo = Math.min(tr.pts.length, tr.drawTo + 3);
         if(tr.drawTo < tr.pts.length) allDone = false;
       });
-      if(allDone && !cycleTimer){
+      if(allDone && tracks.length > 0 && !cycleTimer){
         // All tracks fully drawn — hold 5s then fade
         cycleTimer = setTimeout(()=>{ phase='fade'; }, 5000);
       }
