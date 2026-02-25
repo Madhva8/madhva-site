@@ -240,8 +240,8 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     detDirty = true;
     // Safe to reset now — variables are always initialised before this runs
     tracks = []; hits = []; beams = [];
-    // Re-spawn beams with updated cx/cy/W so they don't ghost at old origin
-    setTimeout(spawnBeams, 0);
+    // Restart cycle with updated dimensions so beams use correct cx/cy/W
+    if(typeof startCycle==='function') setTimeout(startCycle, 0);
   }
   resize();
   window.addEventListener('resize', ()=>{ resize(); });
@@ -538,7 +538,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // ITS hits — all charged particles leave ITS hits
     if (species !== 'photon') {
       [0.068,0.085,0.110,0.142].forEach(f => {
-        if (Math.random()>0.25) hits.push({type:'ITS',r:ri(f),a:jit(0.05),color,age:0,lt:95});
+        if (Math.random()>0.25) hits.push({type:'ITS',r:ri(f),a:jit(0.05),color,age:0,lt:300});
       });
     }
 
@@ -547,7 +547,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       const tpcLayers = species==='proton' ? 4 : 9;
       for (let p=0; p<tpcLayers; p++) {
         const fr = D.tpcInner + (D.tpcOuter-D.tpcInner)*p/tpcLayers;
-        hits.push({type:'TPC',r:ri(fr),a:jit(0.07),color,age:0,lt:95});
+        hits.push({type:'TPC',r:ri(fr),a:jit(0.07),color,age:0,lt:300});
       }
     }
 
@@ -556,13 +556,13 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       const trdLayers = species==='kaon' ? 3 : 6; // kaons stop mid-TRD
       for (let lay=0; lay<trdLayers; lay++) {
         const fr = D.trdInner + (D.trdOuter-D.trdInner)*(lay+0.5)/6;
-        hits.push({type:'TRD',r:ri(fr),a:jit(0.025),age:0,lt:150,lay});
+        hits.push({type:'TRD',r:ri(fr),a:jit(0.025),age:0,lt:400,lay});
       }
     }
 
     // TOF hit — pions, muons reach TOF (not kaons, protons, photons)
     if (species==='pion'||species==='muon') {
-      hits.push({type:'TOF',r:ri((D.tofInner+D.tofOuter)/2),a:jit(0.02),age:0,lt:170});
+      hits.push({type:'TOF',r:ri((D.tofInner+D.tofOuter)/2),a:jit(0.02),age:0,lt:450});
     }
   }
 
@@ -619,40 +619,58 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
   }
 
   // ─────────────────────────────────────────────
-  //  STATE
+  //  CYCLE STATE MACHINE
+  //  idle → beams → collision → hold → fade → idle
   // ─────────────────────────────────────────────
+  let phase = 'idle';   // idle | beams | collision | hold | fade
+  let holdAlpha = 1.0;  // opacity during fade
+  let cycleTimer = null;
+
+  function clearCycleTimer() {
+    if(cycleTimer) { clearTimeout(cycleTimer); cycleTimer=null; }
+  }
+
+  function startCycle() {
+    clearCycleTimer();
+    tracks=[]; hits=[]; beams=[]; holdAlpha=1.0;
+    phase='beams';
+    spawnBeams();
+  }
 
   function triggerCollision() {
+    clearCycleTimer();
     glow=1; beams=[];
-    // Pb+Pb at √s=5.02 TeV central collision
-    // Realistic particle species fractions: ~80% pions, 10% kaons, 5% protons, rest e/μ/γ
-    const n = 48 + Math.floor(Math.random()*18); // 48–65 representative tracks
+    phase='collision';
+    const n = 44 + Math.floor(Math.random()*14); // 44–57 tracks
     for(let i=0;i<n;i++){
-      const angle = Math.PI*2*i/n + (Math.random()-0.5)*0.30;
+      const angle = Math.PI*2*i/n + (Math.random()-0.5)*0.28;
       const tr = makeTrack(angle);
       tracks.push(tr);
       spawnHits(angle, tr.color, tr.species);
     }
-    setTimeout(()=>{ spawnBeams(); }, 2800);
+    // After tracks finish drawing (~3s), hold for 4s, then fade
+    cycleTimer = setTimeout(()=>{
+      phase='hold';
+      cycleTimer = setTimeout(()=>{
+        phase='fade';
+      }, 4000); // hold for 4 seconds
+    }, 3200);
   }
 
   function spawnBeams() {
     beams=[];
-    // Pb beams travel along beam axis (z-axis = horizontal on screen)
-    // Left bunch → right, right bunch → left, both aimed at IP (cx, cy)
-    // Start well outside viewport so they visibly travel in from the edge
-    const bY = cy; // beam axis exactly through interaction point
-    // Each bunch: 1 main beam + 2 faint satellite bunches offset slightly in y
-    beams.push({x: -W*0.1,  y: bY,   vx: 7, trail: [], alpha: 1.0,  r: 2.8}); // main L
-    beams.push({x: -W*0.1,  y: bY-3, vx: 7, trail: [], alpha: 0.35, r: 1.4}); // satellite
-    beams.push({x: -W*0.1,  y: bY+3, vx: 7, trail: [], alpha: 0.35, r: 1.4}); // satellite
-    beams.push({x: W*1.1,   y: bY,   vx:-7, trail: [], alpha: 1.0,  r: 2.8}); // main R
-    beams.push({x: W*1.1,   y: bY-3, vx:-7, trail: [], alpha: 0.35, r: 1.4}); // satellite
-    beams.push({x: W*1.1,   y: bY+3, vx:-7, trail: [], alpha: 0.35, r: 1.4}); // satellite
+    const bY = cy;
+    beams.push({x:-W*0.1,  y:bY,   vx:7,  trail:[], alpha:1.0,  r:2.8});
+    beams.push({x:-W*0.1,  y:bY-3, vx:7,  trail:[], alpha:0.35, r:1.4});
+    beams.push({x:-W*0.1,  y:bY+3, vx:7,  trail:[], alpha:0.35, r:1.4});
+    beams.push({x:W*1.1,   y:bY,   vx:-7, trail:[], alpha:1.0,  r:2.8});
+    beams.push({x:W*1.1,   y:bY-3, vx:-7, trail:[], alpha:0.35, r:1.4});
+    beams.push({x:W*1.1,   y:bY+3, vx:-7, trail:[], alpha:0.35, r:1.4});
   }
 
-  canvas.addEventListener('click',()=>triggerCollision());
-  canvas.addEventListener('touchend',e=>{e.preventDefault();triggerCollision();},{passive:false});
+  // Click/tap always restarts immediately
+  canvas.addEventListener('click',()=>startCycle());
+  canvas.addEventListener('touchend',e=>{e.preventDefault();startCycle();},{passive:false});
 
   // ─────────────────────────────────────────────
   //  MAIN LOOP
@@ -784,25 +802,38 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // Hits and all non-muon tracks clipped to detector boundary
     drawHits();
 
-    const STEP=1.5;
-    tracks=tracks.filter(tr=>{
-      if(tr.species==='muon') return tr.drawTo<tr.pts.length; // already drawn above
-      tr.drawTo=Math.min(tr.pts.length, tr.drawTo+STEP*2);
-      const end=tr.drawTo;
-      if(end<4) return true;
-
-      return drawTrack(tr);
+    const revealing = (phase==='collision' || phase==='beams');
+    tracks.forEach(tr=>{
+      // Advance reveal only during collision phase
+      if(revealing) tr.drawTo=Math.min(tr.pts.length, tr.drawTo+5);
+      drawTrack(tr);
     });
+    // Keep all tracks alive during hold/fade — remove only on idle
+    if(phase==='idle') tracks=[];
 
     ctx.restore(); // end clip region
     if(trackEl) trackEl.textContent=tracks.length;
 
-    autoT++;
-    if(tracks.length===0&&beams.length===0&&autoT>200){spawnBeams();autoT=0;}
-    if(tracks.length>0||beams.length>0)autoT=0;
+    // ── Fade phase: reduce global alpha on all tracks ──
+    if(phase==='fade'){
+      holdAlpha = Math.max(0, holdAlpha-0.012); // ~1.4s fade
+      // Apply fade by re-drawing a dark overlay
+      ctx.save();
+      ctx.globalAlpha = 0.06;
+      ctx.fillStyle='rgb(2,5,14)';
+      ctx.fillRect(0,0,W,H);
+      ctx.restore();
+      if(holdAlpha<=0){
+        phase='idle';
+        tracks=[]; hits=[]; beams=[]; holdAlpha=1.0;
+        // Pause 2s then start next cycle
+        cycleTimer = setTimeout(startCycle, 2000);
+      }
+    }
   }
 
-  spawnBeams();
+  // Kick off first cycle
+  cycleTimer = setTimeout(startCycle, 800);
   loop();
 })();
 </script>
