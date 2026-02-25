@@ -612,14 +612,14 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       return b.x>-50&&b.x<W+50;
     });
 
-    // Hits
-    drawHits();
-
     // Clip drawing to detector boundary — nothing can appear outside the ring
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, D.tofOuter * R * 0.99, 0, Math.PI * 2);
+    ctx.arc(cx, cy, D.emcalOuter * R, 0, Math.PI * 2);
     ctx.clip();
+
+    // Hits and tracks all clipped to detector boundary
+    drawHits();
 
     // Tracks — reveal progressively, draw full trail from origin with fade
     const STEP=1.5;
