@@ -445,6 +445,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
   // ─────────────────────────────────────────────
   function makeTrack(angle) {
     const t = Math.random();
+    const step = 1.5; // px per simulation step — must be before curvForPt
     let color, maxR, curv, dashed=false, species;
 
     // ── Physics-accurate detector response per particle species ──
@@ -534,7 +535,6 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
         : (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R; // TOF
     }
 
-    const step = 1.5;
     const pts = [];
     let vx=Math.cos(angle)*step, vy=Math.sin(angle)*step;
     let px=cx, py=cy;
