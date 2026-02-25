@@ -642,40 +642,31 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       const end=tr.drawTo; // index into flat array (pairs)
       if(end<4) return true;
 
-      // ── Full trail: only draw points inside the detector ring ──
-      const maxDist = D.tofOuter * R * 0.97;
-      const maxDistSq = maxDist * maxDist;
+      // ── Comet tail: short window behind the tip only, fading to transparent ──
+      const TAIL = 120; // how many indices behind tip to draw (shorter = tighter comet)
+      const SEGS = 10;
+      const tailStart = Math.max(0, end - TAIL);
+      const segLen = Math.max(2, Math.floor((end - tailStart) / SEGS / 2) * 2);
 
-      const SEGS=12;
-      const segLen=Math.max(4, Math.floor(end/SEGS/2)*2);
       for(let s=0;s<SEGS;s++){
-        const iStart=Math.max(0, end - (SEGS-s)*segLen);
-        const iEnd  =Math.max(0, end - (SEGS-s-1)*segLen);
-        if(iEnd-iStart<2) continue;
-        const alpha=0.08 + (s/SEGS)*0.80;
+        const iStart = tailStart + s * segLen;
+        const iEnd   = tailStart + (s+1) * segLen;
+        if(iEnd > end || iStart >= end) continue;
+        const alpha = 0.04 + (s / SEGS) * 0.85; // dim at tail, bright at tip
         ctx.beginPath();
-        let drawing=false;
-        for(let i=iStart;i<=iEnd;i+=2){
-          const px=tr.pts[i], py=tr.pts[i+1];
-          if(px===undefined) continue;
-          const inBounds = (px-cx)*(px-cx)+(py-cy)*(py-cy) < maxDistSq;
-          if(inBounds){
-            if(!drawing){ ctx.moveTo(px,py); drawing=true; }
-            else ctx.lineTo(px,py);
-          } else {
-            drawing=false; // break the stroke if point is outside
-          }
-        }
-        ctx.strokeStyle=tr.color;
-        ctx.lineWidth=tr.width*(0.4+0.6*(s/SEGS));
-        ctx.globalAlpha=alpha;
+        ctx.moveTo(tr.pts[iStart], tr.pts[iStart+1]);
+        for(let i=iStart+2; i<=iEnd && i<tr.pts.length; i+=2)
+          ctx.lineTo(tr.pts[i], tr.pts[i+1]);
+        ctx.strokeStyle = tr.color;
+        ctx.lineWidth = tr.width * (0.3 + 0.7*(s/SEGS));
+        ctx.globalAlpha = alpha;
         ctx.stroke();
       }
       ctx.globalAlpha=1;
 
-      // ── Bright leading dot at the tip — only if inside detector ──
+      // ── Bright leading dot at the tip ──
       const tipX=tr.pts[end-2], tipY=tr.pts[end-1];
-      if(tipX!==undefined && (tipX-cx)*(tipX-cx)+(tipY-cy)*(tipY-cy) < maxDistSq){
+      if(tipX!==undefined){
         ctx.beginPath(); ctx.arc(tipX,tipY,tr.width*1.6,0,Math.PI*2);
         ctx.fillStyle=tr.color; ctx.globalAlpha=0.95; ctx.fill();
         ctx.globalAlpha=1;
