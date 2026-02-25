@@ -227,6 +227,10 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
   // ── State declared early so resize() can safely reference them ──
   let tracks = [], hits = [], beams = [], glow = 0, autoT = 0;
+  let phase = 'idle';
+  let holdAlpha = 1.0;
+  let cycleTimer = null;
+  function clearCycleTimer(){ if(cycleTimer){ clearTimeout(cycleTimer); cycleTimer=null; } }
   const trackEl = document.getElementById('track-count');
 
   function resize() {
@@ -239,12 +243,10 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     detDirty = true;
     // Safe to reset now — variables are always initialised before this runs
     tracks = []; hits = []; beams = [];
-    // Restart cycle: always on first load (phase undefined), only if idle thereafter
-    if(typeof startCycle==='function'){
-      if(typeof phase==='undefined' || phase==='idle'){
-        if(typeof clearCycleTimer==='function') clearCycleTimer();
-        setTimeout(startCycle, 0);
-      }
+    // Only restart if idle — don't interrupt a running collision
+    if(typeof startCycle==='function' && phase==='idle'){
+      clearCycleTimer();
+      setTimeout(startCycle, 0);
     }
   }
   resize();
@@ -663,13 +665,6 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
   //  CYCLE STATE MACHINE
   //  idle → beams → collision → hold → fade → idle
   // ─────────────────────────────────────────────
-  let phase = 'idle';   // idle | beams | collision | hold | fade
-  let holdAlpha = 1.0;  // opacity during fade
-  let cycleTimer = null;
-
-  function clearCycleTimer() {
-    if(cycleTimer) { clearTimeout(cycleTimer); cycleTimer=null; }
-  }
 
   function startCycle() {
     clearCycleTimer();
