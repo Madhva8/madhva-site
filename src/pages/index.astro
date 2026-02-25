@@ -444,63 +444,126 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
   //  TRACKS — pre-computed arcs, revealed over time
   // ─────────────────────────────────────────────
   function makeTrack(angle) {
-    const t=Math.random();
-    let color, maxR, curv;
-    if      (t<0.18){color=C.electron;maxR=(D.tofOuter+0.05)*R;curv=(Math.random()>0.5?1:-1)*(0.012+Math.random()*0.016);}
-    else if (t<0.38){color=C.pion;    maxR=(D.trdOuter+0.01)*R;curv=(Math.random()>0.5?1:-1)*(0.005+Math.random()*0.010);}
-    else if (t<0.52){color=C.muon;    maxR=(D.emcalInner+0.03)*R;curv=(Math.random()>0.5?1:-1)*0.005;}
-    else if (t<0.64){color=C.kaon;    maxR=(D.trdInner+Math.random()*0.1)*R;curv=(Math.random()>0.5?1:-1)*0.012;}
-    else if (t<0.76){color=C.photon;  maxR=D.tpcOuter*0.7*R;curv=0;}
-    else            {color=C.proton;  maxR=D.tpcOuter*0.85*R;curv=(Math.random()>0.5?1:-1)*(0.012+Math.random()*0.016);}
+    const t = Math.random();
+    let color, maxR, curv, dashed=false, species;
 
-    // Step size: smaller = denser points = smoother slow reveal
+    // ── Physics-accurate detector response per particle species ──
+    //
+    // ELECTRON  (t<0.12): High curvature (light, charged). Spirals in B-field,
+    //   leaves hits in ITS+TPC+TRD, stopped/showered in EMCal.
+    //
+    // PION      (t<0.42): Most abundant (~80% of tracks). Moderate curvature.
+    //   Leaves hits through ITS→TPC→TRD→TOF. Hadronic interaction stops in TRD/TOF.
+    //
+    // MUON      (t<0.52): Minimum-ionising particle. Tiny curvature, NOT stopped
+    //   by calorimeters. Punches through the entire detector and exits — only
+    //   particle that escapes the detector completely.
+    //
+    // KAON      (t<0.64): Heavier than pion, shorter range. Stops in TRD.
+    //   Decays in flight → bent track.
+    //
+    // PHOTON    (t<0.74): No charge → straight line, NO track in TPC/TRD.
+    //   Converts to e+e- pair in ITS or starts EM shower in EMCal.
+    //   Shown as dashed straight line to EMCal inner boundary.
+    //
+    // PROTON    (t<1.00): Heaviest, most curved (high dE/dx). Stops in TPC
+    //   or early TRD depending on momentum.
+
+    if (t < 0.12) {
+      species='electron'; color=C.electron;
+      // Curls tightly in B-field, stopped in EMCal
+      maxR = (D.emcalInner + 0.02) * R;
+      curv = (Math.random()>0.5?1:-1) * (0.018 + Math.random()*0.022);
+    } else if (t < 0.42) {
+      species='pion'; color=C.pion;
+      // Moderate curvature, range TRD→TOF
+      maxR = (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R;
+      curv = (Math.random()>0.5?1:-1) * (0.004 + Math.random()*0.008);
+    } else if (t < 0.52) {
+      species='muon'; color=C.muon;
+      // Punches through entire detector — goes past canvas edge
+      // Very slight curvature (high momentum MIP)
+      maxR = 1.6 * R; // well beyond detector — exits canvas
+      curv = (Math.random()>0.5?1:-1) * (0.001 + Math.random()*0.003);
+    } else if (t < 0.64) {
+      species='kaon'; color=C.kaon;
+      // Stops in TRD, slightly more curved than pion
+      maxR = (D.trdInner + Math.random()*(D.trdOuter-D.trdInner)) * R;
+      curv = (Math.random()>0.5?1:-1) * (0.009 + Math.random()*0.010);
+    } else if (t < 0.74) {
+      species='photon'; color=C.photon;
+      // No charge → zero curvature, straight to EMCal
+      maxR = (D.emcalInner + 0.01) * R;
+      curv = 0; dashed = true;
+    } else {
+      species='proton'; color=C.proton;
+      // Heavy, high dE/dx → stops early, very curved
+      maxR = (D.tpcInner + Math.random()*(D.tpcOuter-D.tpcInner)*0.7) * R;
+      curv = (Math.random()>0.5?1:-1) * (0.016 + Math.random()*0.018);
+    }
+
     const step = 1.5;
-    const pts=[];
+    const pts = [];
     let vx=Math.cos(angle)*step, vy=Math.sin(angle)*step;
     let px=cx, py=cy;
-    let prevDistSq = 0;
-    while (pts.length<600) {
-      if (curv!==0) {
-        const spd=Math.sqrt(vx*vx+vy*vy);
-        const a2=Math.atan2(vy,vx)+curv;
-        vx=Math.cos(a2)*spd; vy=Math.sin(a2)*spd;
+    let prevDistSq=0;
+    const maxIter = species==='muon' ? 1200 : 700; // muons need more steps to exit
+
+    while (pts.length < maxIter) {
+      if (curv !== 0) {
+        const spd = Math.sqrt(vx*vx+vy*vy);
+        const a2 = Math.atan2(vy,vx) + curv;
+        vx = Math.cos(a2)*spd; vy = Math.sin(a2)*spd;
       }
-      px+=vx; py+=vy;
-      const distSq=(px-cx)**2+(py-cy)**2;
-      const hardLimit = (D.tofOuter * 0.95 * R) ** 2;
+      px += vx; py += vy;
+      const distSq = (px-cx)**2 + (py-cy)**2;
       if (distSq >= maxR*maxR) break;
-      if (distSq >= hardLimit) break; // hard cap — never exceed TOF boundary
-      if (px<0||px>W||py<0||py>H) break;
-      // Stop if track starts curving back toward center (unphysical loop)
-      if (pts.length > 4 && distSq < prevDistSq * 0.98) break;
+      // Muons: also break if they exit the canvas
+      if (px<-20||px>W+20||py<-20||py>H+20) break;
+      // Non-muons: stop if curving back inward (unphysical)
+      if (species!=='muon' && pts.length>4 && distSq < prevDistSq*0.98) break;
       prevDistSq = distSq;
       pts.push(px, py);
     }
-    return {pts, color, drawTo:0, width:0.9+Math.random()*0.8};
+    return {pts, color, drawTo:0, width:0.9+Math.random()*0.8, dashed, species};
   }
 
   // ─────────────────────────────────────────────
   //  HITS
   // ─────────────────────────────────────────────
-  function spawnHits(angle, color) {
-    const ri=f=>f*R;
-    // ITS: 4 hits max
-    [0.068,0.085,0.110,0.142].forEach(f=>{
-      if(Math.random()>0.3) hits.push({type:'ITS',r:ri(f),a:angle+(Math.random()-0.5)*0.05,color,age:0,lt:90});
-    });
-    // TPC: just 8 sparse clusters (not 24)
-    for(let p=0;p<8;p++){
-      const fr=D.tpcInner+(D.tpcOuter-D.tpcInner)*p/8;
-      hits.push({type:'TPC',r:ri(fr),a:angle+(Math.random()-0.5)*0.07,color,age:0,lt:90});
+  function spawnHits(angle, color, species) {
+    const ri = f => f * R;
+    const jit = s => angle + (Math.random()-0.5)*s;
+
+    // ITS hits — all charged particles leave ITS hits
+    if (species !== 'photon') {
+      [0.068,0.085,0.110,0.142].forEach(f => {
+        if (Math.random()>0.25) hits.push({type:'ITS',r:ri(f),a:jit(0.05),color,age:0,lt:95});
+      });
     }
-    // TRD: 6 tracklets
-    for(let lay=0;lay<6;lay++){
-      const fr=D.trdInner+(D.trdOuter-D.trdInner)*(lay+0.5)/6;
-      hits.push({type:'TRD',r:ri(fr),a:angle+(Math.random()-0.5)*0.025,age:0,lt:140,lay});
+
+    // TPC hits — all charged particles except protons (which stop early)
+    if (species !== 'photon') {
+      const tpcLayers = species==='proton' ? 4 : 9;
+      for (let p=0; p<tpcLayers; p++) {
+        const fr = D.tpcInner + (D.tpcOuter-D.tpcInner)*p/tpcLayers;
+        hits.push({type:'TPC',r:ri(fr),a:jit(0.07),color,age:0,lt:95});
+      }
     }
-    // TOF: 1
-    if(Math.random()>0.3)
-      hits.push({type:'TOF',r:ri((D.tofInner+D.tofOuter)/2),a:angle+(Math.random()-0.5)*0.02,age:0,lt:160});
+
+    // TRD tracklets — electrons, pions, muons, kaons (not photons or protons)
+    if (species==='electron'||species==='pion'||species==='muon'||species==='kaon') {
+      const trdLayers = species==='kaon' ? 3 : 6; // kaons stop mid-TRD
+      for (let lay=0; lay<trdLayers; lay++) {
+        const fr = D.trdInner + (D.trdOuter-D.trdInner)*(lay+0.5)/6;
+        hits.push({type:'TRD',r:ri(fr),a:jit(0.025),age:0,lt:150,lay});
+      }
+    }
+
+    // TOF hit — pions, muons reach TOF (not kaons, protons, photons)
+    if (species==='pion'||species==='muon') {
+      hits.push({type:'TOF',r:ri((D.tofInner+D.tofOuter)/2),a:jit(0.02),age:0,lt:170});
+    }
   }
 
   function drawHits() {
@@ -566,8 +629,9 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     const n = 48 + Math.floor(Math.random()*18); // 48–65 representative tracks
     for(let i=0;i<n;i++){
       const angle = Math.PI*2*i/n + (Math.random()-0.5)*0.30;
-      tracks.push(makeTrack(angle));
-      spawnHits(angle, rC());
+      const tr = makeTrack(angle);
+      tracks.push(tr);
+      spawnHits(angle, tr.color, tr.species);
     }
     setTimeout(()=>{ spawnBeams(); }, 2800);
   }
@@ -662,62 +726,72 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       beams = beams.filter(b => b.x > -W*0.15 && b.x < W*1.15);
     }
 
+    // ── Draw muon tracks BEFORE clip (they exit the detector) ──
+    // ── All other tracks/hits drawn AFTER clip ──
+    function drawTrack(tr) {
+      tr.drawTo = Math.min(tr.pts.length, tr.drawTo + 1.5*2);
+      const end = tr.drawTo;
+      if(end < 4) return true;
+
+      const TAIL=120, SEGS=10;
+      const tailStart=Math.max(0, end-TAIL);
+      const segLen=Math.max(2, Math.floor((end-tailStart)/SEGS/2)*2);
+      const maxR2 = tr.species==='muon' ? Infinity : (D.tofOuter*R)**2;
+
+      if (tr.dashed) {
+        ctx.setLineDash([6,5]);
+        ctx.beginPath();
+        ctx.moveTo(tr.pts[0], tr.pts[1]);
+        for(let i=2; i<end && i<tr.pts.length; i+=2)
+          ctx.lineTo(tr.pts[i], tr.pts[i+1]);
+        ctx.strokeStyle=tr.color; ctx.lineWidth=0.9; ctx.globalAlpha=0.65; ctx.stroke();
+        ctx.setLineDash([]);
+      } else {
+        for(let s=0;s<SEGS;s++){
+          const iStart=tailStart+s*segLen, iEnd=tailStart+(s+1)*segLen;
+          if(iEnd>end||iStart>=end) continue;
+          const alpha=0.04+(s/SEGS)*0.85;
+          ctx.beginPath();
+          let drawing=false;
+          for(let i=iStart; i<=iEnd && i<tr.pts.length-1; i+=2){
+            const px=tr.pts[i], py=tr.pts[i+1];
+            if((px-cx)**2+(py-cy)**2 > maxR2){ drawing=false; continue; }
+            if(!drawing){ ctx.moveTo(px,py); drawing=true; } else { ctx.lineTo(px,py); }
+          }
+          ctx.strokeStyle=tr.color; ctx.lineWidth=tr.width*(0.3+0.7*(s/SEGS));
+          ctx.globalAlpha=alpha; ctx.stroke();
+        }
+      }
+      ctx.globalAlpha=1;
+      const tipX=tr.pts[end-2], tipY=tr.pts[end-1];
+      if(tipX!==undefined && (tipX-cx)**2+(tipY-cy)**2 <= maxR2){
+        ctx.beginPath(); ctx.arc(tipX,tipY,tr.width*1.6,0,Math.PI*2);
+        ctx.fillStyle=tr.color; ctx.globalAlpha=0.95; ctx.fill(); ctx.globalAlpha=1;
+      }
+      return tr.drawTo < tr.pts.length;
+    }
+
+    // Muons drawn unclipped so they visibly exit the detector
+    tracks.filter(tr=>tr.species==='muon').forEach(tr=>drawTrack(tr));
+
     // Clip drawing strictly to detector boundary — hits/tracks cannot appear outside the ring
+    // Use 'nonzero' winding rule explicitly for cross-browser Safari/Chrome compat
     ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, D.emcalOuter * R, 0, Math.PI * 2);
-    ctx.clip();
+    ctx.clip('nonzero');
 
-    // Hits and tracks all clipped to detector boundary
+    // Hits and all non-muon tracks clipped to detector boundary
     drawHits();
 
-    // Tracks — reveal progressively, draw full trail from origin with fade
     const STEP=1.5;
     tracks=tracks.filter(tr=>{
+      if(tr.species==='muon') return tr.drawTo<tr.pts.length; // already drawn above
       tr.drawTo=Math.min(tr.pts.length, tr.drawTo+STEP*2);
-      const end=tr.drawTo; // index into flat array (pairs)
+      const end=tr.drawTo;
       if(end<4) return true;
 
-      // ── Comet tail: short window behind the tip only, fading to transparent ──
-      const TAIL = 120; // how many indices behind tip to draw (shorter = tighter comet)
-      const SEGS = 10;
-      const tailStart = Math.max(0, end - TAIL);
-      const segLen = Math.max(2, Math.floor((end - tailStart) / SEGS / 2) * 2);
-
-      const maxR2 = (D.tofOuter * R) ** 2; // hard boundary for track points
-      for(let s=0;s<SEGS;s++){
-        const iStart = tailStart + s * segLen;
-        const iEnd   = tailStart + (s+1) * segLen;
-        if(iEnd > end || iStart >= end) continue;
-        const alpha = 0.04 + (s / SEGS) * 0.85;
-        ctx.beginPath();
-        let drawing = false;
-        for(let i=iStart; i<=iEnd && i<tr.pts.length-1; i+=2){
-          const px=tr.pts[i], py=tr.pts[i+1];
-          const dx=px-cx, dy=py-cy;
-          if(dx*dx+dy*dy > maxR2){ drawing=false; continue; } // skip out-of-bounds points
-          if(!drawing){ ctx.moveTo(px, py); drawing=true; }
-          else { ctx.lineTo(px, py); }
-        }
-        ctx.strokeStyle = tr.color;
-        ctx.lineWidth = tr.width * (0.3 + 0.7*(s/SEGS));
-        ctx.globalAlpha = alpha;
-        ctx.stroke();
-      }
-      ctx.globalAlpha=1;
-
-      // ── Bright leading dot at the tip (only if inside ring) ──
-      const tipX=tr.pts[end-2], tipY=tr.pts[end-1];
-      if(tipX!==undefined){
-        const tdx=tipX-cx, tdy=tipY-cy;
-        if(tdx*tdx+tdy*tdy <= maxR2){
-          ctx.beginPath(); ctx.arc(tipX,tipY,tr.width*1.6,0,Math.PI*2);
-          ctx.fillStyle=tr.color; ctx.globalAlpha=0.95; ctx.fill();
-          ctx.globalAlpha=1;
-        }
-      }
-
-      return tr.drawTo<tr.pts.length;
+      return drawTrack(tr);
     });
 
     ctx.restore(); // end clip region
