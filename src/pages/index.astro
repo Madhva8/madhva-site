@@ -241,13 +241,9 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     detCanvas.width  = W;
     detCanvas.height = H;
     detDirty = true;
-    // Safe to reset now — variables are always initialised before this runs
+    // Reset geometry only — never restart the cycle from resize
+    // The first cycle is kicked off by the cycleTimer at the bottom
     tracks = []; hits = []; beams = [];
-    // Only restart if idle — don't interrupt a running collision
-    if(typeof startCycle==='function' && phase==='idle'){
-      clearCycleTimer();
-      setTimeout(startCycle, 0);
-    }
   }
   resize();
   window.addEventListener('resize', ()=>{ resize(); });
@@ -668,6 +664,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
   function startCycle() {
     clearCycleTimer();
+    tracks = []; hits = []; // clear any lingering tracks before beams animate
     tracks=[]; hits=[]; beams=[]; holdAlpha=1.0;
     phase='beams';
     spawnBeams();
@@ -723,10 +720,10 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       holdAlpha = Math.max(0, holdAlpha - 0.012);
       if(holdAlpha <= 0){
         // Fully faded — clear everything for next cycle
+        tracks = []; hits = []; beams = []; holdAlpha = 1.0;
+        phase = 'idle';
         ctx.clearRect(0,0,W,H);
         ctx.drawImage(detCanvas,0,0);
-        phase = 'idle';
-        tracks = []; hits = []; beams = []; holdAlpha = 1.0;
         cycleTimer = setTimeout(startCycle, 2000);
       }
       if(trackEl) trackEl.textContent = tracks.length;
