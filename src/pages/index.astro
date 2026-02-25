@@ -604,36 +604,37 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       if(glow<0)glow=0;
     }
 
-    // Beams
-    let fired=false;
+    // Clip drawing to detector boundary — nothing can appear outside the ring
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, D.emcalOuter * R, 0, Math.PI * 2);
+    ctx.clip();
+
+    // Beams — drawn inside clip so they can't appear outside detector
+    beams.forEach(b=>{
+      b.trail.push({x:b.x,y:b.y});
+      if(b.trail.length>12)b.trail.shift();
+      b.x+=b.vx;
+    });
     const L=beams.filter(b=>b.vx>0), Ri=beams.filter(b=>b.vx<0);
-    if(!fired&&L.length&&Ri.length&&L[0].x+12>=Ri[0].x){
-      fired=true; triggerCollision(); beams=[]; // kill ALL beams on collision
+    if(L.length&&Ri.length&&L[0].x+12>=Ri[0].x){
+      triggerCollision(); beams=[];
     } else {
       beams=beams.filter(b=>{
-        b.trail.push({x:b.x,y:b.y});
-        if(b.trail.length>12)b.trail.shift();
-        b.x+=b.vx;
-        // Only draw beam heading toward center
-        const headingRight = b.vx > 0;
-        const pastCenter = headingRight ? b.x > cx : b.x < cx;
-        if(!pastCenter){
-          ctx.beginPath();
-          b.trail.forEach((pt,i)=>i===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y));
-          ctx.lineTo(b.x,b.y);
-          ctx.strokeStyle='#ff4466';ctx.lineWidth=1.5;ctx.globalAlpha=0.72;ctx.stroke();ctx.globalAlpha=1;
+        ctx.beginPath();
+        b.trail.filter(pt=>{
+          const dx=pt.x-cx,dy=pt.y-cy;
+          return dx*dx+dy*dy < (D.emcalOuter*R)**2;
+        }).forEach((pt,i)=>i===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y));
+        ctx.strokeStyle='#ff4466';ctx.lineWidth=1.5;ctx.globalAlpha=0.72;ctx.stroke();ctx.globalAlpha=1;
+        const inRing=(b.x-cx)**2+(b.y-cy)**2 < (D.emcalOuter*R)**2;
+        if(inRing){
           ctx.beginPath();ctx.arc(b.x,b.y,3,0,Math.PI*2);
           ctx.fillStyle='rgba(255,68,102,0.9)';ctx.fill();
         }
         return b.x>-50&&b.x<W+50;
       });
     }
-
-    // Clip drawing to detector boundary — nothing can appear outside the ring
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, D.emcalOuter * R, 0, Math.PI * 2);
-    ctx.clip();
 
     // Hits and tracks all clipped to detector boundary
     drawHits();
