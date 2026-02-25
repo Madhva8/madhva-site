@@ -525,7 +525,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       prevDistSq = distSq;
       pts.push(px, py);
     }
-    return {pts, color, width:0.9+Math.random()*0.8, dashed, species};
+    return {pts, color, drawTo:0, width:0.9+Math.random()*0.8, dashed, species};
   }
 
   // ─────────────────────────────────────────────
@@ -640,17 +640,15 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
   function triggerCollision() {
     clearCycleTimer();
     glow=1; beams=[];
-    phase='hold'; // go straight to hold — tracks fully drawn immediately
-    const n = 44 + Math.floor(Math.random()*14); // 44–57 tracks
+    phase='collision'; // tracks grow outward, loop watches for completion
+    const n = 44 + Math.floor(Math.random()*14);
     for(let i=0;i<n;i++){
       const angle = Math.PI*2*i/n + (Math.random()-0.5)*0.28;
       const tr = makeTrack(angle);
-      tr.drawTo = tr.pts.length; // fully drawn from the start
       tracks.push(tr);
       spawnHits(angle, tr.color, tr.species);
     }
-    // Hold 5s so everything is readable, then fade
-    cycleTimer = setTimeout(()=>{ phase='fade'; }, 5000);
+    // hold + fade scheduled by loop once all tracks finish drawing
   }
 
   function spawnBeams() {
@@ -742,6 +740,21 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
     // ── Draw muon tracks BEFORE clip (they exit the detector) ──
     // ── All other tracks/hits drawn AFTER clip ──
+    // ── Advance tracks during collision phase ──
+    // Speed: 3px/frame at step=1.5 → 2 pts/frame → ~60fps means
+    // a pion reaching tofOuter (~200pts) takes ~3s. Feels natural.
+    if(phase==='collision'){
+      let allDone = true;
+      tracks.forEach(tr=>{
+        tr.drawTo = Math.min(tr.pts.length, tr.drawTo + 3);
+        if(tr.drawTo < tr.pts.length) allDone = false;
+      });
+      if(allDone && !cycleTimer){
+        // All tracks fully drawn — hold 5s then fade
+        cycleTimer = setTimeout(()=>{ phase='fade'; }, 5000);
+      }
+    }
+
     // ── Draw muons UNCLIPPED first (they exit the detector) ──
     tracks.filter(tr=>tr.species==='muon').forEach(tr=>renderTrack(tr));
 
@@ -762,33 +775,33 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
     // ── renderTrack: draw full track from IP to stopping point ──
     function renderTrack(tr) {
-      const n = tr.pts.length;
-      if(n < 4) return;
+      const end = Math.min(tr.drawTo, tr.pts.length);
+      if(end < 4) return;
 
       if(tr.dashed){
         // Photon: straight dashed line, no ionisation
         ctx.setLineDash([5,5]);
         ctx.beginPath();
         ctx.moveTo(tr.pts[0], tr.pts[1]);
-        for(let i=2; i<n; i+=2) ctx.lineTo(tr.pts[i], tr.pts[i+1]);
+        for(let i=2; i<end; i+=2) ctx.lineTo(tr.pts[i], tr.pts[i+1]);
         ctx.strokeStyle=tr.color; ctx.lineWidth=1.0;
         ctx.globalAlpha=0.80; ctx.stroke();
         ctx.setLineDash([]); ctx.globalAlpha=1;
         return;
       }
 
-      // ── Full trail: one continuous line from IP to end ──
+      // ── Full trail from IP to current tip — always unbroken ──
       ctx.beginPath();
       ctx.moveTo(tr.pts[0], tr.pts[1]);
-      for(let i=2; i<n; i+=2) ctx.lineTo(tr.pts[i], tr.pts[i+1]);
+      for(let i=2; i<end; i+=2) ctx.lineTo(tr.pts[i], tr.pts[i+1]);
       ctx.strokeStyle = tr.color;
       ctx.lineWidth   = tr.width * 0.9;
       ctx.globalAlpha = 0.85;
       ctx.stroke();
 
-      // ── Bright dot at the stopping point (end of track) ──
+      // ── Bright dot at current tip ──
       ctx.beginPath();
-      ctx.arc(tr.pts[n-2], tr.pts[n-1], tr.width*2.2, 0, Math.PI*2);
+      ctx.arc(tr.pts[end-2], tr.pts[end-1], tr.width*2.2, 0, Math.PI*2);
       ctx.fillStyle = tr.color; ctx.globalAlpha = 1.0; ctx.fill();
 
       ctx.globalAlpha = 1;
