@@ -558,10 +558,11 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
   function spawnBeams() {
     beams=[];
-    for(let i=0;i<2;i++){
-      beams.push({x:-30,y:cy+(i-0.5)*5,vx:9,trail:[]});
-      beams.push({x:W+30,y:cy+(i-0.5)*5,vx:-9,trail:[]});
-    }
+    // Two beams from each side, tightly centered on cy
+    beams.push({x:-30, y:cy-2, vx:9,  trail:[]});
+    beams.push({x:-30, y:cy+2, vx:9,  trail:[]});
+    beams.push({x:W+30,y:cy-2, vx:-9, trail:[]});
+    beams.push({x:W+30,y:cy+2, vx:-9, trail:[]});
   }
 
   canvas.addEventListener('click',()=>triggerCollision());
@@ -603,12 +604,17 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       b.x+=b.vx;
       const L=beams.filter(bb=>bb.vx>0), Ri=beams.filter(bb=>bb.vx<0);
       if(!fired&&L.length&&Ri.length&&L[0].x+12>=Ri[0].x){fired=true;triggerCollision();return false;}
-      ctx.beginPath();
-      b.trail.forEach((pt,i)=>i===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y));
-      ctx.lineTo(b.x,b.y);
-      ctx.strokeStyle='#ff4466';ctx.lineWidth=1.5;ctx.globalAlpha=0.72;ctx.stroke();ctx.globalAlpha=1;
-      ctx.beginPath();ctx.arc(b.x,b.y,3,0,Math.PI*2);
-      ctx.fillStyle='rgba(255,68,102,0.9)';ctx.fill(); // no shadowBlur
+      // Only draw beam if it hasn't passed center yet
+      const headingRight = b.vx > 0;
+      const pastCenter = headingRight ? b.x > cx : b.x < cx;
+      if(!pastCenter){
+        ctx.beginPath();
+        b.trail.forEach((pt,i)=>i===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y));
+        ctx.lineTo(b.x,b.y);
+        ctx.strokeStyle='#ff4466';ctx.lineWidth=1.5;ctx.globalAlpha=0.72;ctx.stroke();ctx.globalAlpha=1;
+        ctx.beginPath();ctx.arc(b.x,b.y,3,0,Math.PI*2);
+        ctx.fillStyle='rgba(255,68,102,0.9)';ctx.fill();
+      }
       return b.x>-50&&b.x<W+50;
     });
 
