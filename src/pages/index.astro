@@ -564,44 +564,31 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
   //  HITS
   // ─────────────────────────────────────────────
   function spawnHits(angle, color, species) {
-    const ri = f => f * R;
+    // Store r as FRACTION of R (not pixels) so hits rescale correctly on resize
     const jit = s => angle + (Math.random()-0.5)*s;
 
-    // ── ITS: all charged particles leave hits in silicon layers ──
     if (species !== 'photon') {
-      // ITS has 6 layers in Run 2 (2 SPD + 2 SDD + 2 SSD), shown as 4 here
       [0.068, 0.085, 0.110, 0.142].forEach(f => {
-        if (Math.random() > 0.20) hits.push({type:'ITS', r:ri(f), a:jit(0.04), color, age:0, lt:300});
+        if (Math.random() > 0.20) hits.push({type:'ITS', rf:f, a:jit(0.04), color, age:0, lt:300});
       });
     }
 
-    // ── TPC: continuous ionisation clusters, all charged particles ──
-    // TPC has up to 159 pad rows — we show 10 representative clusters
     if (species !== 'photon') {
       for (let p=0; p<10; p++) {
         const fr = D.tpcInner + (D.tpcOuter-D.tpcInner)*p/10;
-        hits.push({type:'TPC', r:ri(fr), a:jit(0.06), color, age:0, lt:300});
+        hits.push({type:'TPC', rf:fr, a:jit(0.06), color, age:0, lt:300});
       }
     }
 
-    // ── TRD: 6 layers for electrons, pions, muons, kaons, protons ──
-    // ALL hadrons and leptons that reach TRD leave tracklets in all 6 layers.
-    // (Photons leave nothing — they are neutral.)
-    // TRD is the key detector for your thesis: transition radiation is only
-    // produced by ultra-relativistic electrons, not by pions at same momentum.
     if (species !== 'photon') {
       for (let lay=0; lay<6; lay++) {
         const fr = D.trdInner + (D.trdOuter-D.trdInner)*(lay+0.5)/6;
-        hits.push({type:'TRD', r:ri(fr), a:jit(0.020), age:0, lt:400, lay});
+        hits.push({type:'TRD', rf:fr, a:jit(0.020), age:0, lt:400, lay});
       }
     }
 
-    // ── TOF: all charged hadrons and muons that survive to TOF ──
-    // Pions, kaons, protons, muons all reach TOF and produce a hit.
-    // Electrons are absorbed in EMCal before reaching TOF.
-    // TOF identifies particles by measuring arrival time (Δt ~ mass²/p²).
     if (species==='pion' || species==='kaon' || species==='proton' || species==='muon') {
-      hits.push({type:'TOF', r:ri((D.tofInner+D.tofOuter)/2), a:jit(0.015), age:0, lt:450});
+      hits.push({type:'TOF', rf:(D.tofInner+D.tofOuter)/2, a:jit(0.015), age:0, lt:450});
     }
   }
 
@@ -618,7 +605,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // TPC dots — all same colour to batch
     for(const h of tpc){
       const fade=1-h.age/h.lt;
-      const hx=cx+h.r*Math.cos(h.a), hy=cy+h.r*Math.sin(h.a);
+      const hx=cx+(h.rf*R)*Math.cos(h.a), hy=cy+(h.rf*R)*Math.sin(h.a);
       ctx.beginPath(); ctx.arc(hx,hy,R*0.004,0,Math.PI*2);
       const hAlpha3 = phase==='fade' ? holdAlpha : 1.0;
       ctx.fillStyle=rgba(h.color, fade*0.55*hAlpha3); ctx.fill();
@@ -626,7 +613,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // ITS squares
     for(const h of its){
       const fade=1-h.age/h.lt, s=R*0.009;
-      const hx=cx+h.r*Math.cos(h.a), hy=cy+h.r*Math.sin(h.a);
+      const hx=cx+(h.rf*R)*Math.cos(h.a), hy=cy+(h.rf*R)*Math.sin(h.a);
       const hAlpha4 = phase==='fade' ? holdAlpha : 1.0;
       ctx.fillStyle=rgba(h.color, fade*0.85*hAlpha4);
       ctx.fillRect(hx-s/2,hy-s/2,s,s);
@@ -634,7 +621,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // TRD tracklets — use transform without save/restore to preserve clip
     for(const h of trd){
       const fade=1-h.age/h.lt;
-      const hx=cx+h.r*Math.cos(h.a), hy=cy+h.r*Math.sin(h.a);
+      const hx=cx+(h.rf*R)*Math.cos(h.a), hy=cy+(h.rf*R)*Math.sin(h.a);
       const hw=R*0.020, hh=R*0.009;
       const ang=h.a+Math.PI/2;
       const cos=Math.cos(ang), sin=Math.sin(ang);
@@ -654,7 +641,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // TOF circles
     for(const h of tof){
       const fade=1-h.age/h.lt;
-      const hx=cx+h.r*Math.cos(h.a), hy=cy+h.r*Math.sin(h.a);
+      const hx=cx+(h.rf*R)*Math.cos(h.a), hy=cy+(h.rf*R)*Math.sin(h.a);
       ctx.beginPath(); ctx.arc(hx,hy,R*0.009,0,Math.PI*2);
       const hAlpha2 = phase==='fade' ? holdAlpha : 1.0;
       ctx.fillStyle=`rgba(120,190,255,${(fade*0.90*hAlpha2).toFixed(2)})`; ctx.fill();
@@ -847,10 +834,14 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       ctx.globalAlpha = alpha;
       ctx.stroke();
 
-      // ── Bright dot at current tip ──
-      ctx.beginPath();
-      ctx.arc(tr.pts[end-2], tr.pts[end-1], tr.width*2.2, 0, Math.PI*2);
-      ctx.fillStyle = tr.color; ctx.globalAlpha = phase === 'fade' ? holdAlpha : 1.0; ctx.fill();
+      // ── Bright dot at current tip (skip for muons far outside detector) ──
+      const tipX = tr.pts[end-2], tipY = tr.pts[end-1];
+      const tipDist = Math.sqrt((tipX-cx)**2 + (tipY-cy)**2);
+      if(tr.species !== 'muon' || tipDist < D.tofOuter * R * 1.15){
+        ctx.beginPath();
+        ctx.arc(tipX, tipY, tr.width*2.2, 0, Math.PI*2);
+        ctx.fillStyle = tr.color; ctx.globalAlpha = phase === 'fade' ? holdAlpha : 1.0; ctx.fill();
+      }
 
       ctx.globalAlpha = 1;
     }
