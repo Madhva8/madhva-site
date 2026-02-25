@@ -471,35 +471,62 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
     if (t < 0.12) {
       species='electron'; color=C.electron;
-      // Curls tightly in B-field, stopped in EMCal
-      maxR = (D.emcalInner + 0.02) * R;
-      curv = (Math.random()>0.5?1:-1) * (0.018 + Math.random()*0.022);
+      // ELECTRON — ITS → TPC → TRD → EMCal
+      // Bent by 0.5T B-field. At typical momenta (1–5 GeV/c) the track curves
+      // visibly but still traverses all inner subdetectors. Showered & absorbed
+      // in EMCal. TRD gives strong e/π discrimination via transition radiation.
+      // Curvature: moderate so arc visibly crosses TPC and TRD layers.
+      maxR = (D.emcalInner + 0.005) * R;
+      curv = (Math.random()>0.5?1:-1) * (0.004 + Math.random()*0.004);
+
     } else if (t < 0.42) {
       species='pion'; color=C.pion;
-      // Moderate curvature, range TRD→TOF
-      maxR = (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R;
-      curv = (Math.random()>0.5?1:-1) * (0.004 + Math.random()*0.008);
+      // PION — ITS → TPC → TRD → TOF
+      // Most abundant particle (~80% of charged tracks in Pb+Pb).
+      // Hadronic, so NOT stopped by EMCal. Identified at TOF by time-of-flight.
+      // Slightly less curved than electrons at same momentum.
+      // Stops inside TOF detector volume.
+      maxR = (D.tofInner + Math.random()*(D.tofOuter-D.tofInner+0.03)) * R;
+      curv = (Math.random()>0.5?1:-1) * (0.002 + Math.random()*0.004);
+
     } else if (t < 0.52) {
       species='muon'; color=C.muon;
-      // Punches through entire detector — goes past canvas edge
-      // Very slight curvature (high momentum MIP)
-      maxR = 1.6 * R; // well beyond detector — exits canvas
-      curv = (Math.random()>0.5?1:-1) * (0.001 + Math.random()*0.003);
+      // MUON — ITS → TPC → TRD → TOF → exits detector completely
+      // Minimum-ionising: not stopped by EMCal or any hadronic absorber in
+      // the central barrel. Punches through everything and leaves the detector.
+      // (ALICE has a dedicated forward muon spectrometer but central-barrel
+      //  muons simply escape.) Tiny curvature — near-straight track.
+      maxR = 1.6 * R;
+      curv = (Math.random()>0.5?1:-1) * (0.001 + Math.random()*0.002);
+
     } else if (t < 0.64) {
       species='kaon'; color=C.kaon;
-      // Stops in TRD, slightly more curved than pion
-      maxR = (D.trdInner + Math.random()*(D.trdOuter-D.trdInner)) * R;
-      curv = (Math.random()>0.5?1:-1) * (0.009 + Math.random()*0.010);
+      // KAON — ITS → TPC → TRD → TOF
+      // Heavier than pion (494 MeV/c² vs 140 MeV/c²) so more curved at same
+      // momentum. Identified at TOF — kaon arrives later than pion for same p.
+      // Short-lived kaons (K±) reach TOF; K0s decay before TPC outer edge.
+      // More curved than pion, but still reaches TOF.
+      maxR = (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R;
+      curv = (Math.random()>0.5?1:-1) * (0.006 + Math.random()*0.006);
+
     } else if (t < 0.74) {
       species='photon'; color=C.photon;
-      // No charge → zero curvature, straight to EMCal
-      maxR = (D.emcalInner + 0.01) * R;
+      // PHOTON — straight to EMCal (no charge → no B-field deflection)
+      // Invisible in ITS/TPC/TRD (no ionisation). Converts to e+e- pair at
+      // EMCal inner face and produces an electromagnetic shower.
+      // Shown as a dashed line — no ionisation track, just direction.
+      maxR = (D.emcalInner + 0.005) * R;
       curv = 0; dashed = true;
+
     } else {
       species='proton'; color=C.proton;
-      // Heavy, high dE/dx → stops early, very curved
-      maxR = (D.tpcInner + Math.random()*(D.tpcOuter-D.tpcInner)*0.7) * R;
-      curv = (Math.random()>0.5?1:-1) * (0.016 + Math.random()*0.018);
+      // PROTON — ITS → TPC → TRD → TOF
+      // Heaviest stable hadron (938 MeV/c²). Most curved of the charged hadrons
+      // at same momentum. At LHC momenta (>1 GeV/c) protons DO reach TOF and
+      // are identified there — they arrive latest of all species.
+      // Highly curved track, clearly distinguished from pions.
+      maxR = (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R;
+      curv = (Math.random()>0.5?1:-1) * (0.009 + Math.random()*0.008);
     }
 
     const step = 1.5;
@@ -507,7 +534,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     let vx=Math.cos(angle)*step, vy=Math.sin(angle)*step;
     let px=cx, py=cy;
     let prevDistSq=0;
-    const maxIter = species==='muon' ? 1200 : 700; // muons need more steps to exit
+    const maxIter = species==='muon' ? 1200 : species==='electron' ? 1000 : 700;
 
     while (pts.length < maxIter) {
       if (curv !== 0) {
@@ -520,8 +547,9 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       if (distSq >= maxR*maxR) break;
       // Muons: also break if they exit the canvas
       if (px<-20||px>W+20||py<-20||py>H+20) break;
-      // Non-muons: stop if curving back inward (unphysical)
-      if (species!=='muon' && pts.length>4 && distSq < prevDistSq*0.98) break;
+      // Stop only if track loops back past origin (unphysical at these momenta)
+      // maxR is the primary stop condition; this catches extreme spiral cases
+      if (species!=='electron' && species!=='muon' && pts.length>20 && distSq < (D.itsOuter*R)**2) break;
       prevDistSq = distSq;
       pts.push(px, py);
     }
@@ -535,34 +563,41 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     const ri = f => f * R;
     const jit = s => angle + (Math.random()-0.5)*s;
 
-    // ITS hits — all charged particles leave ITS hits
+    // ── ITS: all charged particles leave hits in silicon layers ──
     if (species !== 'photon') {
-      [0.068,0.085,0.110,0.142].forEach(f => {
-        if (Math.random()>0.25) hits.push({type:'ITS',r:ri(f),a:jit(0.05),color,age:0,lt:300});
+      // ITS has 6 layers in Run 2 (2 SPD + 2 SDD + 2 SSD), shown as 4 here
+      [0.068, 0.085, 0.110, 0.142].forEach(f => {
+        if (Math.random() > 0.20) hits.push({type:'ITS', r:ri(f), a:jit(0.04), color, age:0, lt:300});
       });
     }
 
-    // TPC hits — all charged particles except protons (which stop early)
+    // ── TPC: continuous ionisation clusters, all charged particles ──
+    // TPC has up to 159 pad rows — we show 10 representative clusters
     if (species !== 'photon') {
-      const tpcLayers = species==='proton' ? 4 : 9;
-      for (let p=0; p<tpcLayers; p++) {
-        const fr = D.tpcInner + (D.tpcOuter-D.tpcInner)*p/tpcLayers;
-        hits.push({type:'TPC',r:ri(fr),a:jit(0.07),color,age:0,lt:300});
+      for (let p=0; p<10; p++) {
+        const fr = D.tpcInner + (D.tpcOuter-D.tpcInner)*p/10;
+        hits.push({type:'TPC', r:ri(fr), a:jit(0.06), color, age:0, lt:300});
       }
     }
 
-    // TRD tracklets — electrons, pions, muons, kaons (not photons or protons)
-    if (species==='electron'||species==='pion'||species==='muon'||species==='kaon') {
-      const trdLayers = species==='kaon' ? 3 : 6; // kaons stop mid-TRD
-      for (let lay=0; lay<trdLayers; lay++) {
+    // ── TRD: 6 layers for electrons, pions, muons, kaons, protons ──
+    // ALL hadrons and leptons that reach TRD leave tracklets in all 6 layers.
+    // (Photons leave nothing — they are neutral.)
+    // TRD is the key detector for your thesis: transition radiation is only
+    // produced by ultra-relativistic electrons, not by pions at same momentum.
+    if (species !== 'photon') {
+      for (let lay=0; lay<6; lay++) {
         const fr = D.trdInner + (D.trdOuter-D.trdInner)*(lay+0.5)/6;
-        hits.push({type:'TRD',r:ri(fr),a:jit(0.025),age:0,lt:400,lay});
+        hits.push({type:'TRD', r:ri(fr), a:jit(0.020), age:0, lt:400, lay});
       }
     }
 
-    // TOF hit — pions, muons reach TOF (not kaons, protons, photons)
-    if (species==='pion'||species==='muon') {
-      hits.push({type:'TOF',r:ri((D.tofInner+D.tofOuter)/2),a:jit(0.02),age:0,lt:450});
+    // ── TOF: all charged hadrons and muons that survive to TOF ──
+    // Pions, kaons, protons, muons all reach TOF and produce a hit.
+    // Electrons are absorbed in EMCal before reaching TOF.
+    // TOF identifies particles by measuring arrival time (Δt ~ mass²/p²).
+    if (species==='pion' || species==='kaon' || species==='proton' || species==='muon') {
+      hits.push({type:'TOF', r:ri((D.tofInner+D.tofOuter)/2), a:jit(0.015), age:0, lt:450});
     }
   }
 
