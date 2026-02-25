@@ -675,6 +675,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
   function triggerCollision() {
     clearCycleTimer();
+    tracks=[]; hits=[]; // always clear before adding new tracks
     glow=1; beams=[];
     phase='collision'; // tracks grow outward, loop watches for completion
     const n = 44 + Math.floor(Math.random()*14);
@@ -711,6 +712,26 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
     // Rebuild detector onto offscreen canvas only when needed
     if(detDirty){ buildDetector(); detDirty=false; }
+
+    // During fade: don't clear — just darken the existing frame each tick and return early
+    if(phase === 'fade'){
+      ctx.save();
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = 'rgb(2,5,14)';
+      ctx.fillRect(0,0,W,H);
+      ctx.restore();
+      holdAlpha = Math.max(0, holdAlpha - 0.012);
+      if(holdAlpha <= 0){
+        // Fully faded — clear everything for next cycle
+        ctx.clearRect(0,0,W,H);
+        ctx.drawImage(detCanvas,0,0);
+        phase = 'idle';
+        tracks = []; hits = []; beams = []; holdAlpha = 1.0;
+        cycleTimer = setTimeout(startCycle, 2000);
+      }
+      if(trackEl) trackEl.textContent = tracks.length;
+      return; // skip normal draw this frame
+    }
 
     // Clear full canvas, then stamp detector
     ctx.clearRect(0, 0, W, H);
@@ -841,26 +862,10 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     }
     if(trackEl) trackEl.textContent=tracks.length;
 
-    // ── Fade phase: reduce global alpha on all tracks ──
-    if(phase==='fade'){
-      holdAlpha = Math.max(0, holdAlpha-0.012); // ~1.4s fade
-      // Apply fade by re-drawing a dark overlay
-      ctx.save();
-      ctx.globalAlpha = 0.06;
-      ctx.fillStyle='rgb(2,5,14)';
-      ctx.fillRect(0,0,W,H);
-      ctx.restore();
-      if(holdAlpha<=0){
-        phase='idle';
-        tracks=[]; hits=[]; beams=[]; holdAlpha=1.0;
-        // Pause 2s then start next cycle
-        cycleTimer = setTimeout(startCycle, 2000);
-      }
-    }
+    // Fade is handled at top of loop — see 'During fade' block above
   }
 
-  // Kick off first cycle
-  cycleTimer = setTimeout(startCycle, 800);
+  // Start the loop — first cycle kicked off by resize() above
   loop();
 })();
 </script>
