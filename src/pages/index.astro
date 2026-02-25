@@ -549,14 +549,10 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       }
       px += vx; py += vy;
       const distSq = (px-cx)**2 + (py-cy)**2;
+      // Primary stop: track reached its assigned detector boundary
       if (distSq >= maxR*maxR) break;
-      // Muons: also break if they exit the canvas
+      // Stop if track leaves canvas (catches runaway muons and extreme spirals)
       if (px<-20||px>W+20||py<-20||py>H+20) break;
-      // Hard canvas boundary — no non-muon track should leave the canvas
-      if (species!=='muon' && (px<-10||px>W+10||py<-10||py>H+10)) break;
-      // Catch runaway spirals that loop back past ITS
-      if (species!=='electron' && species!=='muon' && pts.length>20 && distSq < (D.itsOuter*R)**2) break;
-      prevDistSq = distSq;
       pts.push(px, py);
     }
     return {pts, color, drawTo:0, width:0.9+Math.random()*0.8, dashed, species};
