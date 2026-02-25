@@ -228,6 +228,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
   // ── State declared early so resize() can safely reference them ──
   let tracks = [], hits = [], beams = [], glow = 0, autoT = 0;
+  const trackEl = document.getElementById('track-count');
 
   function resize() {
     W = canvas.width  = window.innerWidth;
@@ -609,7 +610,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // Clip drawing strictly to detector boundary — nothing can appear outside the ring
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, D.tofOuter * R, 0, Math.PI * 2);
+    ctx.arc(cx, cy, D.emcalOuter * R, 0, Math.PI * 2);
     ctx.clip();
 
     // Beams — update positions first, then draw only inside-ring segments
@@ -623,7 +624,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       triggerCollision(); beams=[];
     } else {
       beams=beams.filter(b=>{
-        const ringR2 = (D.tofOuter * R) ** 2;
+        const ringR2 = (D.emcalOuter * R) ** 2;
         const insidePts = b.trail.filter(pt => {
           const dx=pt.x-cx, dy=pt.y-cy;
           return dx*dx+dy*dy < ringR2;
