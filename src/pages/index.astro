@@ -606,33 +606,39 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       if(glow<0)glow=0;
     }
 
-    // Clip drawing to detector boundary — nothing can appear outside the ring
+    // Clip drawing strictly to detector boundary — nothing can appear outside the ring
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, D.emcalOuter * R, 0, Math.PI * 2);
+    ctx.arc(cx, cy, D.tofOuter * R, 0, Math.PI * 2);
     ctx.clip();
 
-    // Beams — drawn inside clip so they can't appear outside detector
+    // Beams — update positions first, then draw only inside-ring segments
     beams.forEach(b=>{
-      b.trail.push({x:b.x,y:b.y});
-      if(b.trail.length>12)b.trail.shift();
-      b.x+=b.vx;
+      b.trail.push({x:b.x, y:b.y});
+      if(b.trail.length>12) b.trail.shift();
+      b.x += b.vx;
     });
     const L=beams.filter(b=>b.vx>0), Ri=beams.filter(b=>b.vx<0);
     if(L.length&&Ri.length&&L[0].x+12>=Ri[0].x){
       triggerCollision(); beams=[];
     } else {
       beams=beams.filter(b=>{
-        ctx.beginPath();
-        b.trail.filter(pt=>{
-          const dx=pt.x-cx,dy=pt.y-cy;
-          return dx*dx+dy*dy < (D.emcalOuter*R)**2;
-        }).forEach((pt,i)=>i===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y));
-        ctx.strokeStyle='#ff4466';ctx.lineWidth=1.5;ctx.globalAlpha=0.72;ctx.stroke();ctx.globalAlpha=1;
-        const inRing=(b.x-cx)**2+(b.y-cy)**2 < (D.emcalOuter*R)**2;
+        const ringR2 = (D.tofOuter * R) ** 2;
+        const insidePts = b.trail.filter(pt => {
+          const dx=pt.x-cx, dy=pt.y-cy;
+          return dx*dx+dy*dy < ringR2;
+        });
+        if(insidePts.length > 1){
+          ctx.beginPath();
+          ctx.moveTo(insidePts[0].x, insidePts[0].y);
+          for(let i=1; i<insidePts.length; i++)
+            ctx.lineTo(insidePts[i].x, insidePts[i].y);
+          ctx.strokeStyle='#ff4466'; ctx.lineWidth=1.5; ctx.globalAlpha=0.72; ctx.stroke(); ctx.globalAlpha=1;
+        }
+        const inRing=(b.x-cx)**2+(b.y-cy)**2 < ringR2;
         if(inRing){
-          ctx.beginPath();ctx.arc(b.x,b.y,3,0,Math.PI*2);
-          ctx.fillStyle='rgba(255,68,102,0.9)';ctx.fill();
+          ctx.beginPath(); ctx.arc(b.x,b.y,3,0,Math.PI*2);
+          ctx.fillStyle='rgba(255,68,102,0.9)'; ctx.fill();
         }
         return b.x>-50&&b.x<W+50;
       });
