@@ -234,8 +234,10 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     detCanvas.width  = W;
     detCanvas.height = H;
     detDirty = true;
-    // Clear stale tracks/hits — they were built with old cx/cy/R
-    if(typeof tracks !== 'undefined'){ tracks=[]; hits=[]; beams=[]; }
+    // Guard: only clear tracks/hits/beams if they've been initialised
+    if (typeof tracks !== 'undefined' && tracks !== null) {
+      tracks = []; hits = []; beams = [];
+    }
   }
   resize();
   window.addEventListener('resize', ()=>{ resize(); });
