@@ -438,12 +438,12 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
   function makeTrack(angle) {
     const t=Math.random();
     let color, maxR, curv;
-    if      (t<0.18){color=C.electron;maxR=(D.tofOuter+0.05)*R;curv=(Math.random()>0.5?1:-1)*(0.012+Math.random()*0.022);}
-    else if (t<0.38){color=C.pion;    maxR=(D.trdOuter+0.01)*R;curv=(Math.random()>0.5?1:-1)*(0.005+Math.random()*0.015);}
-    else if (t<0.52){color=C.muon;    maxR=(D.emcalInner+0.03)*R;curv=(Math.random()>0.5?1:-1)*0.006;}
-    else if (t<0.64){color=C.kaon;    maxR=(D.trdInner+Math.random()*0.1)*R;curv=(Math.random()>0.5?1:-1)*0.018;}
+    if      (t<0.18){color=C.electron;maxR=(D.tofOuter+0.05)*R;curv=(Math.random()>0.5?1:-1)*(0.012+Math.random()*0.016);}
+    else if (t<0.38){color=C.pion;    maxR=(D.trdOuter+0.01)*R;curv=(Math.random()>0.5?1:-1)*(0.005+Math.random()*0.010);}
+    else if (t<0.52){color=C.muon;    maxR=(D.emcalInner+0.03)*R;curv=(Math.random()>0.5?1:-1)*0.005;}
+    else if (t<0.64){color=C.kaon;    maxR=(D.trdInner+Math.random()*0.1)*R;curv=(Math.random()>0.5?1:-1)*0.012;}
     else if (t<0.76){color=C.photon;  maxR=D.tpcOuter*0.7*R;curv=0;}
-    else            {color=C.proton;  maxR=D.tpcOuter*0.85*R;curv=(Math.random()>0.5?1:-1)*(0.02+Math.random()*0.03);}
+    else            {color=C.proton;  maxR=D.tpcOuter*0.85*R;curv=(Math.random()>0.5?1:-1)*(0.012+Math.random()*0.016);}
 
     // Step size: smaller = denser points = smoother slow reveal
     const step = 1.5;
@@ -458,7 +458,10 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
         vx=Math.cos(a2)*spd; vy=Math.sin(a2)*spd;
       }
       px+=vx; py+=vy;
-      if ((px-cx)**2+(py-cy)**2 >= maxR*maxR) break;
+      const distSq=(px-cx)**2+(py-cy)**2;
+      if (distSq >= maxR*maxR) break;
+      if (distSq >= (D.tofOuter*0.98*R)**2) break; // hard cap at detector edge
+      if (px<0||px>W||py<0||py>H) break; // don't go off screen
     }
     return {pts, color, drawTo:0, width:0.9+Math.random()*0.8};
   }
