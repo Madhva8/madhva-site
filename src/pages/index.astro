@@ -226,6 +226,9 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
   const dctx = detCanvas.getContext('2d');
   let detDirty = true; // rebuild when resized
 
+  // ── State declared early so resize() can safely reference them ──
+  let tracks = [], hits = [], beams = [], glow = 0, autoT = 0;
+
   function resize() {
     W = canvas.width  = window.innerWidth;
     H = canvas.height = window.innerHeight;
@@ -234,10 +237,8 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     detCanvas.width  = W;
     detCanvas.height = H;
     detDirty = true;
-    // Guard: only clear tracks/hits/beams if they've been initialised
-    if (typeof tracks !== 'undefined' && tracks !== null) {
-      tracks = []; hits = []; beams = [];
-    }
+    // Safe to reset now — variables are always initialised before this runs
+    tracks = []; hits = []; beams = [];
   }
   resize();
   window.addEventListener('resize', ()=>{ resize(); });
@@ -477,7 +478,6 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
   // ─────────────────────────────────────────────
   //  HITS
   // ─────────────────────────────────────────────
-  let hits=[];
   function spawnHits(angle, color) {
     const ri=f=>f*R;
     // ITS: 4 hits max
@@ -554,8 +554,6 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
   // ─────────────────────────────────────────────
   //  STATE
   // ─────────────────────────────────────────────
-  let tracks=[], beams=[], glow=0, autoT=0;
-  const trackEl=document.getElementById('track-count');
 
   function triggerCollision() {
     glow=1; beams=[];
