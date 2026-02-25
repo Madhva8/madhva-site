@@ -451,7 +451,6 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     let vx=Math.cos(angle)*step, vy=Math.sin(angle)*step;
     let px=cx, py=cy;
     while (pts.length<600) {
-      pts.push(px, py); // flat array: x0,y0,x1,y1... faster than objects
       if (curv!==0) {
         const spd=Math.sqrt(vx*vx+vy*vy);
         const a2=Math.atan2(vy,vx)+curv;
@@ -460,8 +459,9 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       px+=vx; py+=vy;
       const distSq=(px-cx)**2+(py-cy)**2;
       if (distSq >= maxR*maxR) break;
-      if (distSq >= (D.tofOuter*0.98*R)**2) break; // hard cap at detector edge
+      if (distSq >= (D.tofOuter*0.97*R)**2) break; // hard cap at detector edge
       if (px<0||px>W||py<0||py>H) break; // don't go off screen
+      pts.push(px, py); // only push if within bounds
     }
     return {pts, color, drawTo:0, width:0.9+Math.random()*0.8};
   }
@@ -611,6 +611,12 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // Hits
     drawHits();
 
+    // Clip drawing to detector boundary — nothing can appear outside the ring
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, D.tofOuter * R * 0.99, 0, Math.PI * 2);
+    ctx.clip();
+
     // Tracks — reveal progressively, draw full trail from origin with fade
     const STEP=1.5;
     tracks=tracks.filter(tr=>{
@@ -646,6 +652,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       return tr.drawTo<tr.pts.length;
     });
 
+    ctx.restore(); // end clip region
     if(trackEl) trackEl.textContent=tracks.length;
 
     autoT++;
