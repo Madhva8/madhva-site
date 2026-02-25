@@ -576,7 +576,8 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // Rebuild detector onto offscreen canvas only when needed
     if(detDirty){ buildDetector(); detDirty=false; }
 
-    // Stamp detector (one drawImage call instead of 200+ canvas ops)
+    // Clear full canvas, then stamp detector
+    ctx.clearRect(0, 0, W, H);
     ctx.drawImage(detCanvas, 0, 0);
 
     // Collision flash — no radialGradient every frame unless active
