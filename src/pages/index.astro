@@ -472,12 +472,12 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     if (t < 0.12) {
       species='electron'; color=C.electron;
       // ELECTRON — ITS → TPC → TRD → EMCal
-      // Bent by 0.5T B-field. At typical momenta (1–5 GeV/c) the track curves
-      // visibly but still traverses all inner subdetectors. Showered & absorbed
-      // in EMCal. TRD gives strong e/π discrimination via transition radiation.
-      // Curvature: moderate so arc visibly crosses TPC and TRD layers.
+      // Bent by 0.5T B-field. Radius of curvature must be LESS than emcalInner
+      // so the arc stays inside the detector and hits EMCal.
+      // curv=0.010–0.016 → r_curv=94–150px, well inside emcalInner (320px).
+      // The arc visibly curves through ITS, TPC, TRD layers before stopping.
       maxR = (D.emcalInner + 0.005) * R;
-      curv = (Math.random()>0.5?1:-1) * (0.004 + Math.random()*0.004);
+      curv = (Math.random()>0.5?1:-1) * (0.010 + Math.random()*0.006);
 
     } else if (t < 0.42) {
       species='pion'; color=C.pion;
@@ -547,8 +547,9 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       if (distSq >= maxR*maxR) break;
       // Muons: also break if they exit the canvas
       if (px<-20||px>W+20||py<-20||py>H+20) break;
-      // Stop only if track loops back past origin (unphysical at these momenta)
-      // maxR is the primary stop condition; this catches extreme spiral cases
+      // Hard canvas boundary — no non-muon track should leave the canvas
+      if (species!=='muon' && (px<-10||px>W+10||py<-10||py>H+10)) break;
+      // Catch runaway spirals that loop back past ITS
       if (species!=='electron' && species!=='muon' && pts.length>20 && distSq < (D.itsOuter*R)**2) break;
       prevDistSq = distSq;
       pts.push(px, py);
