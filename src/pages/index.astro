@@ -450,6 +450,7 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     const pts=[];
     let vx=Math.cos(angle)*step, vy=Math.sin(angle)*step;
     let px=cx, py=cy;
+    let prevDistSq = 0;
     while (pts.length<600) {
       if (curv!==0) {
         const spd=Math.sqrt(vx*vx+vy*vy);
@@ -459,9 +460,12 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       px+=vx; py+=vy;
       const distSq=(px-cx)**2+(py-cy)**2;
       if (distSq >= maxR*maxR) break;
-      if (distSq >= (D.tofOuter*0.97*R)**2) break; // hard cap at detector edge
-      if (px<0||px>W||py<0||py>H) break; // don't go off screen
-      pts.push(px, py); // only push if within bounds
+      if (distSq >= (D.tofOuter*0.97*R)**2) break;
+      if (px<0||px>W||py<0||py>H) break;
+      // Stop if track starts curving back toward center (unphysical loop)
+      if (pts.length > 4 && distSq < prevDistSq * 0.98) break;
+      prevDistSq = distSq;
+      pts.push(px, py);
     }
     return {pts, color, drawTo:0, width:0.9+Math.random()*0.8};
   }
