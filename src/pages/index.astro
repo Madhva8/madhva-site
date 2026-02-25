@@ -519,16 +519,24 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       ctx.fillStyle=rgba(h.color, fade*0.85);
       ctx.fillRect(hx-s/2,hy-s/2,s,s);
     }
-    // TRD tracklets — no shadowBlur, use bright fill instead
+    // TRD tracklets — use transform without save/restore to preserve clip
     for(const h of trd){
       const fade=1-h.age/h.lt;
       const hx=cx+h.r*Math.cos(h.a), hy=cy+h.r*Math.sin(h.a);
       const hw=R*0.020, hh=R*0.009;
-      ctx.save();
-      ctx.translate(hx,hy); ctx.rotate(h.a+Math.PI/2);
+      const ang=h.a+Math.PI/2;
+      const cos=Math.cos(ang), sin=Math.sin(ang);
+      // Draw rotated rect manually as a parallelogram
+      const dx1=cos*hw/2, dy1=sin*hw/2;
+      const dx2=-sin*hh/2, dy2=cos*hh/2;
+      ctx.beginPath();
+      ctx.moveTo(hx+dx1+dx2, hy+dy1+dy2);
+      ctx.lineTo(hx-dx1+dx2, hy-dy1+dy2);
+      ctx.lineTo(hx-dx1-dx2, hy-dy1-dy2);
+      ctx.lineTo(hx+dx1-dx2, hy+dy1-dy2);
+      ctx.closePath();
       ctx.fillStyle=`rgba(0,255,128,${(fade*0.92).toFixed(2)})`;
-      ctx.fillRect(-hw/2,-hh/2,hw,hh);
-      ctx.restore();
+      ctx.fill();
     }
     // TOF circles
     for(const h of tof){
