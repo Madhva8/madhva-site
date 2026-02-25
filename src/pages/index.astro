@@ -239,8 +239,11 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     detDirty = true;
     // Safe to reset now — variables are always initialised before this runs
     tracks = []; hits = []; beams = [];
-    // Restart cycle with updated dimensions so beams use correct cx/cy/W
-    if(typeof startCycle==='function') setTimeout(startCycle, 0);
+    // Only restart if idle — don't interrupt a running collision
+    if(typeof startCycle==='function' && typeof phase!=='undefined' && phase==='idle'){
+      clearCycleTimer();
+      setTimeout(startCycle, 0);
+    }
   }
   resize();
   window.addEventListener('resize', ()=>{ resize(); });
