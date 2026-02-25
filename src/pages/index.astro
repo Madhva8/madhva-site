@@ -469,76 +469,69 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // PROTON    (t<1.00): Heaviest, most curved (high dE/dx). Stops in TPC
     //   or early TRD depending on momentum.
 
-    // ── Physics: r_curv = step/curv. Track reaches radius r only if r_curv > r.
-    // At R=350px, TPC outer=186px, TRD outer=248px, TOF=273px, EMCal=280px.
-    // B=0.5T, scale=1.33cm/px → curv = (pT_GeV * 0.3 * B * scale) / step
-    // For a track to reach TOF: r_curv > 273px → curv < 0.0055
-    // For a track to stay in TPC: r_curv < 186px → curv > 0.0081
+    // ── Physics-accurate curvature from B=0.5T solenoid ──
+    // r_curv [px] = pT [GeV/c] * D.tpcOuter * R / (0.3 * B * TPC_outer_m)
+    //             = pT * D.tpcOuter * R / 0.3705   (TPC outer = 2.47m, B=0.5T)
+    // curv = step / r_curv = 0.5558 / (pT * D.tpcOuter * R)
+    // Scale-independent: works at any screen size.
+    const curvForPt = pt => step * 0.3705 / (pt * D.tpcOuter * R);
+    // A track reaches radius f*R only if r_curv > f*R, i.e. pT > 0.3705/f
+    // tofOuter (f=0.78): pT > 0.475 GeV/c to reach TOF
+    // trdOuter (f=0.71): pT > 0.432 GeV/c to reach TRD outer
+    // tpcOuter (f=0.53): pT > 0.323 GeV/c to reach TPC outer
+    const sign = () => Math.random()>0.5 ? 1 : -1;
 
     if (t < 0.12) {
       species='electron'; color=C.electron;
-      // ELECTRON — ITS → TPC → TRD → EMCal (showered & absorbed)
-      // pT typically 0.5–3 GeV/c in Pb+Pb. At pT=0.5: r_curv=250px (reaches TRD).
-      // At pT=1.5: r_curv=750px (near-straight through TRD, stops at EMCal).
-      // Visibly curved arc crossing all inner subdetectors. Key: TRD gives
-      // transition radiation signal for e/π separation (your thesis!).
+      // ELECTRON — ITS → TPC → TRD → EMCal
+      // pT=0.5–3 GeV/c. Visible arc through all inner detectors.
+      // TRD gives transition radiation for e/π separation.
+      const pt = 0.5 + Math.random()*2.5;
+      curv = sign() * curvForPt(pt);
       maxR = (D.emcalInner + 0.005) * R;
-      curv = (Math.random()>0.5?1:-1) * (0.002 + Math.random()*0.003); // pT~0.5–3 GeV/c
 
     } else if (t < 0.42) {
       species='pion'; color=C.pion;
-      // PION — ITS → TPC → TRD → TOF (identified by time-of-flight)
-      // Most abundant (~80% of tracks). pT=0.2–2 GeV/c.
-      // At low pT (0.2 GeV/c): r_curv=100px — stops in TPC (correct for soft pions).
-      // At mid pT (0.5 GeV/c): r_curv=250px — reaches TRD.
-      // At high pT (1+ GeV/c): r_curv=500px+ — reaches TOF.
-      // Mix of momenta so some stop in TPC, most reach TRD/TOF.
-      const pionPt = 0.2 + Math.random()*1.8; // flat pT spectrum 0.2–2 GeV/c
-      const pionCurv = 1.5 / (pionPt / (0.3*0.5) / 0.01332); // physics curv
-      curv = (Math.random()>0.5?1:-1) * Math.min(pionCurv, 0.014);
-      // maxR depends on pT: low-pT pions stop in TPC, high-pT reach TOF
-      maxR = pionCurv > 0.0081
-        ? (D.tpcInner + Math.random()*(D.tpcOuter-D.tpcInner)) * R  // stops in TPC
-        : (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R; // reaches TOF
+      // PION — bulk: pT=0.15–2 GeV/c, Boltzmann-like spectrum
+      // Low-pT pions stop in TPC; mid/high-pT reach TRD and TOF
+      const pt = 0.15 + Math.random()*1.85;
+      curv = sign() * curvForPt(pt);
+      maxR = pt < 0.35
+        ? (D.tpcInner + Math.random()*(D.tpcOuter-D.tpcInner)*0.6) * R // TPC
+        : pt < 0.55
+          ? (D.trdInner + Math.random()*(D.trdOuter-D.trdInner)) * R   // TRD
+          : (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R;  // TOF
 
     } else if (t < 0.52) {
       species='muon'; color=C.muon;
-      // MUON — exits the entire detector (minimum-ionising, not absorbed)
-      // pT=1.5–5 GeV/c → r_curv=750–2500px → near-straight tracks
+      // MUON — MIP, exits entire detector. pT=1–5 GeV/c → near-straight.
+      const pt = 1.0 + Math.random()*4.0;
+      curv = sign() * curvForPt(pt);
       maxR = 1.6 * R;
-      curv = (Math.random()>0.5?1:-1) * (0.0006 + Math.random()*0.0014);
 
     } else if (t < 0.64) {
       species='kaon'; color=C.kaon;
-      // KAON — ITS → TPC → TRD → TOF (heavier than pion, more curved)
-      // pT=0.3–2 GeV/c. At pT=0.3: r_curv=150px — stops in TPC.
-      // At pT=0.6+: r_curv=300px+ — reaches TRD and TOF.
-      const kaonPt = 0.3 + Math.random()*1.7;
-      const kaonCurv = 1.5 / (kaonPt / (0.3*0.5) / 0.01332);
-      curv = (Math.random()>0.5?1:-1) * Math.min(kaonCurv, 0.010);
-      maxR = kaonCurv > 0.0081
-        ? (D.tpcOuter - Math.random()*0.1) * R   // stops in TPC
-        : (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R;
+      // KAON — pT=0.3–2 GeV/c, more curved than pion at same pT
+      const pt = 0.3 + Math.random()*1.7;
+      curv = sign() * curvForPt(pt);
+      maxR = pt < 0.45
+        ? (D.tpcInner + Math.random()*(D.tpcOuter-D.tpcInner)*0.7) * R // TPC
+        : (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R;    // TOF
 
     } else if (t < 0.74) {
       species='photon'; color=C.photon;
-      // PHOTON — no charge → no B-field deflection, no ITS/TPC/TRD signal
-      // Straight dashed line to EMCal where it showers electromagnetically
+      // PHOTON — neutral, straight dashed line to EMCal
       maxR = (D.emcalInner + 0.005) * R;
       curv = 0; dashed = true;
 
     } else {
       species='proton'; color=C.proton;
-      // PROTON — ITS → TPC → TRD → TOF (heaviest, most curved at same pT)
-      // pT=0.5–2.5 GeV/c. More curved than kaons/pions at same momentum.
-      // At pT=0.5: r_curv=250px — just reaches TRD.
-      // At pT=1+: r_curv=500px+ — reaches TOF. Identified there (latest arrival).
-      const protonPt = 0.5 + Math.random()*2.0;
-      const protonCurv = 1.5 / (protonPt / (0.3*0.5) / 0.01332);
-      curv = (Math.random()>0.5?1:-1) * Math.min(protonCurv, 0.006);
-      maxR = protonCurv > 0.0060
-        ? (D.trdInner + Math.random()*(D.trdOuter-D.trdInner)) * R  // stops in TRD
-        : (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R; // reaches TOF
+      // PROTON — pT=0.5–2.5 GeV/c, heaviest → most curved at same pT
+      const pt = 0.5 + Math.random()*2.0;
+      curv = sign() * curvForPt(pt);
+      maxR = pt < 0.55
+        ? (D.trdInner + Math.random()*(D.trdOuter-D.trdInner)) * R  // TRD
+        : (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R; // TOF
     }
 
     const step = 1.5;
