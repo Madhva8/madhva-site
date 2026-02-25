@@ -465,8 +465,9 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       }
       px+=vx; py+=vy;
       const distSq=(px-cx)**2+(py-cy)**2;
+      const hardLimit = (D.tofOuter * 0.95 * R) ** 2;
       if (distSq >= maxR*maxR) break;
-      if (distSq >= (D.tofOuter*0.97*R)**2) break;
+      if (distSq >= hardLimit) break; // hard cap — never exceed TOF boundary
       if (px<0||px>W||py<0||py>H) break;
       // Stop if track starts curving back toward center (unphysical loop)
       if (pts.length > 4 && distSq < prevDistSq * 0.98) break;
@@ -661,15 +662,21 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       const tailStart = Math.max(0, end - TAIL);
       const segLen = Math.max(2, Math.floor((end - tailStart) / SEGS / 2) * 2);
 
+      const maxR2 = (D.tofOuter * R) ** 2; // hard boundary for track points
       for(let s=0;s<SEGS;s++){
         const iStart = tailStart + s * segLen;
         const iEnd   = tailStart + (s+1) * segLen;
         if(iEnd > end || iStart >= end) continue;
-        const alpha = 0.04 + (s / SEGS) * 0.85; // dim at tail, bright at tip
+        const alpha = 0.04 + (s / SEGS) * 0.85;
         ctx.beginPath();
-        ctx.moveTo(tr.pts[iStart], tr.pts[iStart+1]);
-        for(let i=iStart+2; i<=iEnd && i<tr.pts.length; i+=2)
-          ctx.lineTo(tr.pts[i], tr.pts[i+1]);
+        let drawing = false;
+        for(let i=iStart; i<=iEnd && i<tr.pts.length-1; i+=2){
+          const px=tr.pts[i], py=tr.pts[i+1];
+          const dx=px-cx, dy=py-cy;
+          if(dx*dx+dy*dy > maxR2){ drawing=false; continue; } // skip out-of-bounds points
+          if(!drawing){ ctx.moveTo(px, py); drawing=true; }
+          else { ctx.lineTo(px, py); }
+        }
         ctx.strokeStyle = tr.color;
         ctx.lineWidth = tr.width * (0.3 + 0.7*(s/SEGS));
         ctx.globalAlpha = alpha;
@@ -677,12 +684,15 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       }
       ctx.globalAlpha=1;
 
-      // ── Bright leading dot at the tip ──
+      // ── Bright leading dot at the tip (only if inside ring) ──
       const tipX=tr.pts[end-2], tipY=tr.pts[end-1];
       if(tipX!==undefined){
-        ctx.beginPath(); ctx.arc(tipX,tipY,tr.width*1.6,0,Math.PI*2);
-        ctx.fillStyle=tr.color; ctx.globalAlpha=0.95; ctx.fill();
-        ctx.globalAlpha=1;
+        const tdx=tipX-cx, tdy=tipY-cy;
+        if(tdx*tdx+tdy*tdy <= maxR2){
+          ctx.beginPath(); ctx.arc(tipX,tipY,tr.width*1.6,0,Math.PI*2);
+          ctx.fillStyle=tr.color; ctx.globalAlpha=0.95; ctx.fill();
+          ctx.globalAlpha=1;
+        }
       }
 
       return tr.drawTo<tr.pts.length;
