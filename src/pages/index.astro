@@ -620,13 +620,15 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       const fade=1-h.age/h.lt;
       const hx=cx+h.r*Math.cos(h.a), hy=cy+h.r*Math.sin(h.a);
       ctx.beginPath(); ctx.arc(hx,hy,R*0.004,0,Math.PI*2);
-      ctx.fillStyle=rgba(h.color, fade*0.55); ctx.fill();
+      const hAlpha3 = phase==='fade' ? holdAlpha : 1.0;
+      ctx.fillStyle=rgba(h.color, fade*0.55*hAlpha3); ctx.fill();
     }
     // ITS squares
     for(const h of its){
       const fade=1-h.age/h.lt, s=R*0.009;
       const hx=cx+h.r*Math.cos(h.a), hy=cy+h.r*Math.sin(h.a);
-      ctx.fillStyle=rgba(h.color, fade*0.85);
+      const hAlpha4 = phase==='fade' ? holdAlpha : 1.0;
+      ctx.fillStyle=rgba(h.color, fade*0.85*hAlpha4);
       ctx.fillRect(hx-s/2,hy-s/2,s,s);
     }
     // TRD tracklets — use transform without save/restore to preserve clip
@@ -645,7 +647,8 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       ctx.lineTo(hx-dx1-dx2, hy-dy1-dy2);
       ctx.lineTo(hx+dx1-dx2, hy+dy1-dy2);
       ctx.closePath();
-      ctx.fillStyle=`rgba(0,255,128,${(fade*0.92).toFixed(2)})`;
+      const hAlpha = phase==='fade' ? holdAlpha : 1.0;
+      ctx.fillStyle=`rgba(0,255,128,${(fade*0.92*hAlpha).toFixed(2)})`;
       ctx.fill();
     }
     // TOF circles
@@ -653,7 +656,8 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
       const fade=1-h.age/h.lt;
       const hx=cx+h.r*Math.cos(h.a), hy=cy+h.r*Math.sin(h.a);
       ctx.beginPath(); ctx.arc(hx,hy,R*0.009,0,Math.PI*2);
-      ctx.fillStyle=`rgba(120,190,255,${(fade*0.90).toFixed(2)})`; ctx.fill();
+      const hAlpha2 = phase==='fade' ? holdAlpha : 1.0;
+      ctx.fillStyle=`rgba(120,190,255,${(fade*0.90*hAlpha2).toFixed(2)})`; ctx.fill();
     }
   }
 
@@ -711,24 +715,14 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // Rebuild detector onto offscreen canvas only when needed
     if(detDirty){ buildDetector(); detDirty=false; }
 
-    // During fade: don't clear — just darken the existing frame each tick and return early
+    // During fade: tick holdAlpha down — tracks drawn below at reduced opacity
     if(phase === 'fade'){
-      ctx.save();
-      ctx.globalAlpha = 0.12;
-      ctx.fillStyle = 'rgb(2,5,14)';
-      ctx.fillRect(0,0,W,H);
-      ctx.restore();
-      holdAlpha = Math.max(0, holdAlpha - 0.012);
+      holdAlpha = Math.max(0, holdAlpha - 0.018);
       if(holdAlpha <= 0){
-        // Fully faded — clear everything for next cycle
         tracks = []; hits = []; beams = []; holdAlpha = 1.0;
         phase = 'idle';
-        ctx.clearRect(0,0,W,H);
-        ctx.drawImage(detCanvas,0,0);
         cycleTimer = setTimeout(startCycle, 2000);
       }
-      if(trackEl) trackEl.textContent = tracks.length;
-      return; // skip normal draw this frame
     }
 
     // Clear full canvas, then stamp detector
@@ -843,19 +837,20 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
         return;
       }
 
+      const alpha = phase === 'fade' ? holdAlpha * 0.85 : 0.85;
       // ── Full trail from IP to current tip — always unbroken ──
       ctx.beginPath();
       ctx.moveTo(tr.pts[0], tr.pts[1]);
       for(let i=2; i<end; i+=2) ctx.lineTo(tr.pts[i], tr.pts[i+1]);
       ctx.strokeStyle = tr.color;
       ctx.lineWidth   = tr.width * 0.9;
-      ctx.globalAlpha = 0.85;
+      ctx.globalAlpha = alpha;
       ctx.stroke();
 
       // ── Bright dot at current tip ──
       ctx.beginPath();
       ctx.arc(tr.pts[end-2], tr.pts[end-1], tr.width*2.2, 0, Math.PI*2);
-      ctx.fillStyle = tr.color; ctx.globalAlpha = 1.0; ctx.fill();
+      ctx.fillStyle = tr.color; ctx.globalAlpha = phase === 'fade' ? holdAlpha : 1.0; ctx.fill();
 
       ctx.globalAlpha = 1;
     }
