@@ -469,64 +469,76 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // PROTON    (t<1.00): Heaviest, most curved (high dE/dx). Stops in TPC
     //   or early TRD depending on momentum.
 
+    // ── Physics: r_curv = step/curv. Track reaches radius r only if r_curv > r.
+    // At R=350px, TPC outer=186px, TRD outer=248px, TOF=273px, EMCal=280px.
+    // B=0.5T, scale=1.33cm/px → curv = (pT_GeV * 0.3 * B * scale) / step
+    // For a track to reach TOF: r_curv > 273px → curv < 0.0055
+    // For a track to stay in TPC: r_curv < 186px → curv > 0.0081
+
     if (t < 0.12) {
       species='electron'; color=C.electron;
-      // ELECTRON — ITS → TPC → TRD → EMCal
-      // Bent by 0.5T B-field. Radius of curvature must be LESS than emcalInner
-      // so the arc stays inside the detector and hits EMCal.
-      // curv=0.010–0.016 → r_curv=94–150px, well inside emcalInner (320px).
-      // The arc visibly curves through ITS, TPC, TRD layers before stopping.
+      // ELECTRON — ITS → TPC → TRD → EMCal (showered & absorbed)
+      // pT typically 0.5–3 GeV/c in Pb+Pb. At pT=0.5: r_curv=250px (reaches TRD).
+      // At pT=1.5: r_curv=750px (near-straight through TRD, stops at EMCal).
+      // Visibly curved arc crossing all inner subdetectors. Key: TRD gives
+      // transition radiation signal for e/π separation (your thesis!).
       maxR = (D.emcalInner + 0.005) * R;
-      curv = (Math.random()>0.5?1:-1) * (0.010 + Math.random()*0.006);
+      curv = (Math.random()>0.5?1:-1) * (0.002 + Math.random()*0.003); // pT~0.5–3 GeV/c
 
     } else if (t < 0.42) {
       species='pion'; color=C.pion;
-      // PION — ITS → TPC → TRD → TOF
-      // Most abundant particle (~80% of charged tracks in Pb+Pb).
-      // Hadronic, so NOT stopped by EMCal. Identified at TOF by time-of-flight.
-      // Slightly less curved than electrons at same momentum.
-      // Stops inside TOF detector volume.
-      maxR = (D.tofInner + Math.random()*(D.tofOuter-D.tofInner+0.03)) * R;
-      curv = (Math.random()>0.5?1:-1) * (0.002 + Math.random()*0.004);
+      // PION — ITS → TPC → TRD → TOF (identified by time-of-flight)
+      // Most abundant (~80% of tracks). pT=0.2–2 GeV/c.
+      // At low pT (0.2 GeV/c): r_curv=100px — stops in TPC (correct for soft pions).
+      // At mid pT (0.5 GeV/c): r_curv=250px — reaches TRD.
+      // At high pT (1+ GeV/c): r_curv=500px+ — reaches TOF.
+      // Mix of momenta so some stop in TPC, most reach TRD/TOF.
+      const pionPt = 0.2 + Math.random()*1.8; // flat pT spectrum 0.2–2 GeV/c
+      const pionCurv = 1.5 / (pionPt / (0.3*0.5) / 0.01332); // physics curv
+      curv = (Math.random()>0.5?1:-1) * Math.min(pionCurv, 0.014);
+      // maxR depends on pT: low-pT pions stop in TPC, high-pT reach TOF
+      maxR = pionCurv > 0.0081
+        ? (D.tpcInner + Math.random()*(D.tpcOuter-D.tpcInner)) * R  // stops in TPC
+        : (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R; // reaches TOF
 
     } else if (t < 0.52) {
       species='muon'; color=C.muon;
-      // MUON — ITS → TPC → TRD → TOF → exits detector completely
-      // Minimum-ionising: not stopped by EMCal or any hadronic absorber in
-      // the central barrel. Punches through everything and leaves the detector.
-      // (ALICE has a dedicated forward muon spectrometer but central-barrel
-      //  muons simply escape.) Tiny curvature — near-straight track.
+      // MUON — exits the entire detector (minimum-ionising, not absorbed)
+      // pT=1.5–5 GeV/c → r_curv=750–2500px → near-straight tracks
       maxR = 1.6 * R;
-      curv = (Math.random()>0.5?1:-1) * (0.001 + Math.random()*0.002);
+      curv = (Math.random()>0.5?1:-1) * (0.0006 + Math.random()*0.0014);
 
     } else if (t < 0.64) {
       species='kaon'; color=C.kaon;
-      // KAON — ITS → TPC → TRD → TOF
-      // Heavier than pion (494 MeV/c² vs 140 MeV/c²) so more curved at same
-      // momentum. Identified at TOF — kaon arrives later than pion for same p.
-      // Short-lived kaons (K±) reach TOF; K0s decay before TPC outer edge.
-      // More curved than pion, but still reaches TOF.
-      maxR = (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R;
-      curv = (Math.random()>0.5?1:-1) * (0.006 + Math.random()*0.006);
+      // KAON — ITS → TPC → TRD → TOF (heavier than pion, more curved)
+      // pT=0.3–2 GeV/c. At pT=0.3: r_curv=150px — stops in TPC.
+      // At pT=0.6+: r_curv=300px+ — reaches TRD and TOF.
+      const kaonPt = 0.3 + Math.random()*1.7;
+      const kaonCurv = 1.5 / (kaonPt / (0.3*0.5) / 0.01332);
+      curv = (Math.random()>0.5?1:-1) * Math.min(kaonCurv, 0.010);
+      maxR = kaonCurv > 0.0081
+        ? (D.tpcOuter - Math.random()*0.1) * R   // stops in TPC
+        : (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R;
 
     } else if (t < 0.74) {
       species='photon'; color=C.photon;
-      // PHOTON — straight to EMCal (no charge → no B-field deflection)
-      // Invisible in ITS/TPC/TRD (no ionisation). Converts to e+e- pair at
-      // EMCal inner face and produces an electromagnetic shower.
-      // Shown as a dashed line — no ionisation track, just direction.
+      // PHOTON — no charge → no B-field deflection, no ITS/TPC/TRD signal
+      // Straight dashed line to EMCal where it showers electromagnetically
       maxR = (D.emcalInner + 0.005) * R;
       curv = 0; dashed = true;
 
     } else {
       species='proton'; color=C.proton;
-      // PROTON — ITS → TPC → TRD → TOF
-      // Heaviest stable hadron (938 MeV/c²). Most curved of the charged hadrons
-      // at same momentum. At LHC momenta (>1 GeV/c) protons DO reach TOF and
-      // are identified there — they arrive latest of all species.
-      // Highly curved track, clearly distinguished from pions.
-      maxR = (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R;
-      curv = (Math.random()>0.5?1:-1) * (0.009 + Math.random()*0.008);
+      // PROTON — ITS → TPC → TRD → TOF (heaviest, most curved at same pT)
+      // pT=0.5–2.5 GeV/c. More curved than kaons/pions at same momentum.
+      // At pT=0.5: r_curv=250px — just reaches TRD.
+      // At pT=1+: r_curv=500px+ — reaches TOF. Identified there (latest arrival).
+      const protonPt = 0.5 + Math.random()*2.0;
+      const protonCurv = 1.5 / (protonPt / (0.3*0.5) / 0.01332);
+      curv = (Math.random()>0.5?1:-1) * Math.min(protonCurv, 0.006);
+      maxR = protonCurv > 0.0060
+        ? (D.trdInner + Math.random()*(D.trdOuter-D.trdInner)) * R  // stops in TRD
+        : (D.tofInner + Math.random()*(D.tofOuter-D.tofInner)) * R; // reaches TOF
     }
 
     const step = 1.5;
