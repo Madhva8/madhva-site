@@ -33,7 +33,6 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
         <span class="hud-mono hint-pulse">↓ scroll to explore</span>
       </div>
       <div class="hud-corner hud-bl">
-        <span class="hud-mono hint-click">⊕ click to collide</span>
       </div>
 
       <!-- Particle legend — right side -->
@@ -699,9 +698,6 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     beams.push({x:W*1.1,   y:bY+3, vx:-7, trail:[], alpha:0.35, r:1.4});
   }
 
-  // Click/tap always restarts immediately
-  canvas.addEventListener('click',()=>startCycle());
-  canvas.addEventListener('touchend',e=>{e.preventDefault();startCycle();},{passive:false});
 
   // ─────────────────────────────────────────────
   //  MAIN LOOP
@@ -956,7 +952,6 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     50% { opacity: 0.7; }
   }
   .hint-pulse { animation: hintPulse 2.5s ease-in-out infinite; }
-  .hint-click { animation: hintPulse 2s ease-in-out infinite 0.5s; }
 
   /* ── Particle legend ── */
   .hud-legend {
