@@ -746,72 +746,90 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 
     // ── Draw muon tracks BEFORE clip (they exit the detector) ──
     // ── All other tracks/hits drawn AFTER clip ──
-    function drawTrack(tr) {
-      tr.drawTo = Math.min(tr.pts.length, tr.drawTo + 1.5*2);
-      const end = tr.drawTo;
-      if(end < 4) return true;
-
-      const TAIL=120, SEGS=10;
-      const tailStart=Math.max(0, end-TAIL);
-      const segLen=Math.max(2, Math.floor((end-tailStart)/SEGS/2)*2);
-      const maxR2 = tr.species==='muon' ? Infinity : (D.tofOuter*R)**2;
-
-      if (tr.dashed) {
-        ctx.setLineDash([6,5]);
-        ctx.beginPath();
-        ctx.moveTo(tr.pts[0], tr.pts[1]);
-        for(let i=2; i<end && i<tr.pts.length; i+=2)
-          ctx.lineTo(tr.pts[i], tr.pts[i+1]);
-        ctx.strokeStyle=tr.color; ctx.lineWidth=0.9; ctx.globalAlpha=0.65; ctx.stroke();
-        ctx.setLineDash([]);
-      } else {
-        for(let s=0;s<SEGS;s++){
-          const iStart=tailStart+s*segLen, iEnd=tailStart+(s+1)*segLen;
-          if(iEnd>end||iStart>=end) continue;
-          const alpha=0.04+(s/SEGS)*0.85;
-          ctx.beginPath();
-          let drawing=false;
-          for(let i=iStart; i<=iEnd && i<tr.pts.length-1; i+=2){
-            const px=tr.pts[i], py=tr.pts[i+1];
-            if((px-cx)**2+(py-cy)**2 > maxR2){ drawing=false; continue; }
-            if(!drawing){ ctx.moveTo(px,py); drawing=true; } else { ctx.lineTo(px,py); }
-          }
-          ctx.strokeStyle=tr.color; ctx.lineWidth=tr.width*(0.3+0.7*(s/SEGS));
-          ctx.globalAlpha=alpha; ctx.stroke();
-        }
-      }
-      ctx.globalAlpha=1;
-      const tipX=tr.pts[end-2], tipY=tr.pts[end-1];
-      if(tipX!==undefined && (tipX-cx)**2+(tipY-cy)**2 <= maxR2){
-        ctx.beginPath(); ctx.arc(tipX,tipY,tr.width*1.6,0,Math.PI*2);
-        ctx.fillStyle=tr.color; ctx.globalAlpha=0.95; ctx.fill(); ctx.globalAlpha=1;
-      }
-      return tr.drawTo < tr.pts.length;
+    // ── Advance drawTo during collision phase only ──
+    const revealing = (phase==='collision');
+    if(revealing){
+      tracks.forEach(tr=>{
+        tr.drawTo = Math.min(tr.pts.length, tr.drawTo + 4);
+      });
     }
 
-    // Muons drawn unclipped so they visibly exit the detector
-    tracks.filter(tr=>tr.species==='muon').forEach(tr=>drawTrack(tr));
+    // ── Draw muons UNCLIPPED first (they exit the detector) ──
+    tracks.filter(tr=>tr.species==='muon').forEach(tr=>renderTrack(tr));
 
-    // Clip drawing strictly to detector boundary — hits/tracks cannot appear outside the ring
-    // Use 'nonzero' winding rule explicitly for cross-browser Safari/Chrome compat
+    // ── Clip all other drawing to detector boundary ──
     ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, D.emcalOuter * R, 0, Math.PI * 2);
     ctx.clip('nonzero');
 
-    // Hits and all non-muon tracks clipped to detector boundary
     drawHits();
 
-    const revealing = (phase==='collision' || phase==='beams');
-    tracks.forEach(tr=>{
-      // Advance reveal only during collision phase
-      if(revealing) tr.drawTo=Math.min(tr.pts.length, tr.drawTo+5);
-      drawTrack(tr);
-    });
-    // Keep all tracks alive during hold/fade — remove only on idle
+    // Draw all non-muon tracks inside the clip
+    tracks.filter(tr=>tr.species!=='muon').forEach(tr=>renderTrack(tr));
+
     if(phase==='idle') tracks=[];
 
     ctx.restore(); // end clip region
+
+    // ── renderTrack: draws the FULL trail from origin to drawTo tip ──
+    // Drawn as a persistent glowing line — no comet, no disappearing
+    function renderTrack(tr) {
+      const end = tr.drawTo;
+      if(end < 4) return;
+      const maxR2 = tr.species==='muon' ? Infinity : (D.tofOuter*R)**2;
+
+      if(tr.dashed){
+        // Photon: dashed straight line
+        ctx.setLineDash([6,5]);
+        ctx.beginPath();
+        let first=true;
+        for(let i=0; i<end && i<tr.pts.length-1; i+=2){
+          if(first){ ctx.moveTo(tr.pts[i],tr.pts[i+1]); first=false; }
+          else ctx.lineTo(tr.pts[i],tr.pts[i+1]);
+        }
+        ctx.strokeStyle=tr.color; ctx.lineWidth=0.8;
+        ctx.globalAlpha=0.7; ctx.stroke(); ctx.setLineDash([]);
+        ctx.globalAlpha=1;
+        return;
+      }
+
+      // Full persistent trail from IP to tip — drawn in 2 passes:
+      // Pass 1: faint full-length trail (so origin→tip is always visible)
+      ctx.beginPath();
+      let first=true;
+      for(let i=0; i<end && i<tr.pts.length-1; i+=2){
+        const px=tr.pts[i], py=tr.pts[i+1];
+        if((px-cx)**2+(py-cy)**2 > maxR2){ first=true; continue; }
+        if(first){ ctx.moveTo(px,py); first=false; } else ctx.lineTo(px,py);
+      }
+      ctx.strokeStyle=tr.color;
+      ctx.lineWidth=tr.width*0.55;
+      ctx.globalAlpha=0.28;
+      ctx.stroke();
+
+      // Pass 2: bright tip segment (last ~80 points) — shows where particle is now
+      const tipStart = Math.max(0, end-80);
+      ctx.beginPath();
+      first=true;
+      for(let i=tipStart; i<end && i<tr.pts.length-1; i+=2){
+        const px=tr.pts[i], py=tr.pts[i+1];
+        if((px-cx)**2+(py-cy)**2 > maxR2){ first=true; continue; }
+        if(first){ ctx.moveTo(px,py); first=false; } else ctx.lineTo(px,py);
+      }
+      ctx.strokeStyle=tr.color;
+      ctx.lineWidth=tr.width*1.1;
+      ctx.globalAlpha=0.88;
+      ctx.stroke();
+
+      // Bright dot at tip
+      const tipX=tr.pts[end-2], tipY=tr.pts[end-1];
+      if(tipX!==undefined && (tipX-cx)**2+(tipY-cy)**2<=maxR2){
+        ctx.beginPath(); ctx.arc(tipX,tipY,tr.width*1.8,0,Math.PI*2);
+        ctx.fillStyle=tr.color; ctx.globalAlpha=0.95; ctx.fill();
+      }
+      ctx.globalAlpha=1;
+    }
     if(trackEl) trackEl.textContent=tracks.length;
 
     // ── Fade phase: reduce global alpha on all tracks ──
