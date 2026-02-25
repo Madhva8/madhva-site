@@ -239,10 +239,12 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     detDirty = true;
     // Safe to reset now — variables are always initialised before this runs
     tracks = []; hits = []; beams = [];
-    // Only restart if idle — don't interrupt a running collision
-    if(typeof startCycle==='function' && typeof phase!=='undefined' && phase==='idle'){
-      clearCycleTimer();
-      setTimeout(startCycle, 0);
+    // Restart cycle: always on first load (phase undefined), only if idle thereafter
+    if(typeof startCycle==='function'){
+      if(typeof phase==='undefined' || phase==='idle'){
+        if(typeof clearCycleTimer==='function') clearCycleTimer();
+        setTimeout(startCycle, 0);
+      }
     }
   }
   resize();
