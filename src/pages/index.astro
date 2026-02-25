@@ -669,10 +669,12 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     spawnBeams();
   }
 
+  let collisionAge = 0; // frames since collision started
   function triggerCollision() {
     clearCycleTimer();
     tracks=[]; hits=[]; // always clear before adding new tracks
     glow=1; beams=[];
+    collisionAge = 0;
     phase='collision'; // tracks grow outward, loop watches for completion
     const n = 44 + Math.floor(Math.random()*14);
     for(let i=0;i<n;i++){
@@ -794,12 +796,13 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
     // Speed: 3px/frame at step=1.5 → 2 pts/frame → ~60fps means
     // a pion reaching tofOuter (~200pts) takes ~3s. Feels natural.
     if(phase==='collision'){
+      collisionAge++;
       let allDone = true;
       tracks.forEach(tr=>{
         tr.drawTo = Math.min(tr.pts.length, tr.drawTo + 3);
         if(tr.drawTo < tr.pts.length) allDone = false;
       });
-      if(allDone && tracks.length > 0 && !cycleTimer){
+      if(allDone && tracks.length > 0 && collisionAge > 10 && !cycleTimer){
         // All tracks fully drawn — hold 5s then fade
         cycleTimer = setTimeout(()=>{ phase='fade'; }, 5000);
       }
